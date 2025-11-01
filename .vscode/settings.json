@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "array": "cpp",
+        "complex": "cpp",
+        "memory": "cpp",
+        "format": "cpp",
+        "istream": "cpp",
+        "functional": "cpp",
+        "tuple": "cpp",
+        "utility": "cpp",
+        "variant": "cpp"
+    }
+}
