@@ -1,5 +1,5 @@
-#ifndef UI_CONTROL_HPP
-#define UI_CONTROL_HPP
+#ifndef FILE_PROCESSOR_HPP
+#define FILE_PROCESSOR_HPP
 
 #include <map>
 #include <string>
@@ -39,4 +39,4 @@ std::vector<std::string> getMenuEntries() {
     return entries;
 }
 
-#endif // UI_CONTROL_HPP
+#endif // FILE_PROCESSOR_HPP

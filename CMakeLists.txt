@@ -25,7 +25,10 @@ FetchContent_MakeAvailable(ftxui)
 # 2. Ihr eigenes Programm definieren
 # ----------------------------------------------------------------------
 # Quellendateien Ihres Projekts definieren
-add_executable(tfm main.cpp) 
+add_executable(tfm 
+    main.cpp
+    fileprocessor.cpp
+) 
 
 # Die ausführbare Datei mit der FTXUI-Bibliothek verlinken
 target_link_libraries(tfm PUBLIC 
