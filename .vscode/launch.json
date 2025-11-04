@@ -9,13 +9,13 @@
             "name": "Debug C++ (tfm)",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/tfm", // 👈 WICHTIG: Pfad zu Ihrem ausführbaren Programm
+            "program": "${workspaceFolder}/build/tfm",
             "args": [],
-            "stopAtEntry": true, // Hält am Anfang von main() an
-            "cwd": "${workspaceFolder}/build", // Startverzeichnis des Debuggers
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}/build",
             "environment": [],
             "externalConsole": false,
-            "MIMode": "gdb", // Oder "lldb" auf manchen Systemen
+            "MIMode": "gdb",
             "setupCommands": [
                 {
                     "description": "Enable pretty printing for gdb",
@@ -23,7 +23,6 @@
                     "ignoreFailures": true
                 }
             ],
-            // 💡 WICHTIG: Fügen Sie den Pre-Launch-Task hinzu, um vor dem Debuggen zu bauen
             "preLaunchTask": "cmake build" 
         }
     ]

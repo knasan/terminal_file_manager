@@ -8,6 +8,14 @@ project(TUI_File_Manager CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Aktiviere strenge Warnungen für alle Targets
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    add_compile_options(-Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wshadow)
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    add_compile_options(/W4 /permissive- /w44265 /w44062)
+endif()
+
+
 # ----------------------------------------------------------------------
 # 1. FTXUI von GitHub einbinden (FetchContent)
 # ----------------------------------------------------------------------
