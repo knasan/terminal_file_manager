@@ -13,7 +13,7 @@ using namespace ftxui;
 class FileManagerUI {
 private:
   // UI State
-  int m_left_selected = 0;
+  int m_selected = 0;
   int m_right_selected = 0;
 
   // Paths and files
@@ -24,7 +24,7 @@ private:
 
   // UI Components
   Component m_top_menu;
-  Component m_left_menu;
+  Component m_menu;
   Component m_main_view;
   Component m_document;
   Component createPanel();

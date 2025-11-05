@@ -80,7 +80,7 @@ void FileManagerUI::showDuplicates() {
 
   m_file_infos = m_duplicate_files;
   updateMenuStrings(m_file_infos, m_panel_files);
-  m_left_selected = 0;
+  m_selected = 0;
   m_show_duplicates_only = true;
 
   // Status mit Wasted Space
@@ -100,7 +100,7 @@ void FileManagerUI::clearFilter() {
   // Restore original files
   m_file_infos = m_all_files;
   updateMenuStrings(m_file_infos, m_panel_files);
-  m_left_selected = 0;
+  m_selected = 0;
   m_show_duplicates_only = false;
 
   m_current_status = "Filter cleared. Showing all files.";
@@ -161,13 +161,13 @@ void FileManagerUI::setupFilePanels() {
     return row;
   };
 
-  m_left_menu = Menu(&m_panel_files, &m_left_selected, menu_option);
+  m_menu = Menu(&m_panel_files, &m_selected, menu_option);
 
   // Event handling as usual
-  m_left_menu = m_left_menu | CatchEvent([this](Event event) {
+  m_menu = m_menu | CatchEvent([this](Event event) {
                   if (event == Event::Return && !m_file_infos.empty()) {
                     if (auto *selected_info =
-                            safe_at(m_file_infos, m_left_selected)) {
+                            safe_at(m_file_infos, m_selected)) {
                       return handleFileSelection(*selected_info);
                     }
                   }
@@ -183,7 +183,7 @@ void FileManagerUI::setupFilePanels() {
 }
 
 Component FileManagerUI::createPanelWithTable() {
-  return Renderer(m_left_menu, [this] {
+  return Renderer(m_menu, [this] {
     int terminal_height = Terminal::Size().dimy;
 
     // Layout: Top(1) + Sep(1) + Status(1) = 3
@@ -198,7 +198,7 @@ Component FileManagerUI::createPanelWithTable() {
 
     return vbox({text(m_panel_path) | bold | color(Color::Green),
                  separator(), header, separator(),
-                 m_left_menu->Render() | vscroll_indicator | frame |
+                 m_menu->Render() | vscroll_indicator | frame |
                      size(HEIGHT, EQUAL, available_height)}) |
            border;
   });
@@ -225,7 +225,7 @@ void FileManagerUI::setupMainLayout() {
 }
 
 Component FileManagerUI::createPanel() {
-  return Renderer(m_left_menu, [this] {
+  return Renderer(m_menu, [this] {
     int terminal_height = Terminal::Size().dimy;
     int available_height = terminal_height - 6;
 
@@ -233,7 +233,7 @@ Component FileManagerUI::createPanel() {
     std::vector<Element> entries;
     for (size_t i = 0; i < m_file_infos.size(); ++i) {
       const auto &info = m_file_infos[i];
-      bool selected = (i == static_cast<size_t>(m_left_selected));
+      bool selected = (i == static_cast<size_t>(m_selected));
 
       auto element = text(info.getDisplayName());
 
@@ -310,10 +310,10 @@ bool FileManagerUI::handleDirectoryChange(const FileInfo &selected_info) {
 
   updateMenuStrings(m_file_infos, m_panel_files);
 
-  m_left_selected =
+  m_selected =
       m_file_infos.empty()
           ? 0
-          : std::clamp(m_left_selected, 0,
+          : std::clamp(m_selected, 0,
                        static_cast<int>(m_file_infos.size()) - 1);
 
   m_current_status = "Directory changed: " + m_panel_path;
