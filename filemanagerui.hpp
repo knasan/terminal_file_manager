@@ -15,7 +15,8 @@ private:
   // UI State
   int m_left_selected = 0;
   int m_right_selected = 0;
-  int m_left_panel_size = 100;
+  static constexpr int DEFAULT_LEFT_PANEL_WIDTH = 100;
+  int m_left_panel_size = DEFAULT_LEFT_PANEL_WIDTH;
 
   // Paths and files
   std::string m_current_dir;
@@ -32,13 +33,12 @@ private:
   Component m_file_split_view;
   Component m_document;
 
-  std::string m_current_status = "Ready. Press Tab to switch panels.";
+  std::string m_current_status = "Ready.";
   ScreenInteractive m_screen = ScreenInteractive::TerminalOutput();
 
   std::vector<std::string> m_menu_entries;
 
   // Helper methods
-  std::vector<std::string> fileInfoToMenuStrings(const std::vector<FileInfo> &);
   bool handleFileSelection(const FileInfo &);
   bool handleDirectoryChange(const FileInfo &);
   ActionID getActionIdByIndex(int);
@@ -46,12 +46,14 @@ private:
   // UI
   void setupTopMenu();
   void setupFilePanels();
-  // void setupLeftPanelEvents();
   void initialize();
   void getMenuEntries();
-
-  // Component
-  Component createPanel(Component, const std::string &);
+  
+  void updateMenuStrings(const std::vector<FileInfo>& i,std::vector<std::string>& t);
+  
+  Component createLeftPanel();
+  Component createRightPanel();
+  
 
 public:
   int m_top_menu_selected = 0;
@@ -63,8 +65,6 @@ public:
   
   void setupMainLayout();
   bool handleGlobalShortcut(char);
-
-  
 
   void run();
 };
