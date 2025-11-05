@@ -10,6 +10,8 @@
 #include "fileprocessor.hpp" // Enthält FileProcessor Klasse
 #include "fileinfo.hpp"      // Enthält FileInfo Struktur
 
+#include <iostream>
+
 namespace fs = std::filesystem;
 
 // ----------------------------------------------------------------------

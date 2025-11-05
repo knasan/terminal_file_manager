@@ -29,14 +29,4 @@ const std::map<ActionID, ActionInfo> ActionMap = {
     {ActionID::Quit,              {'q', "(q) Beenden"}}
 };
 
-// Funktion, um die Menüeinträge aus der ActionMap zu generieren
-std::vector<std::string> getMenuEntries() {
-    std::vector<std::string> entries;
-    for (const auto& pair : ActionMap) {
-        // Wir wollen nur die Menütexte
-        entries.push_back(pair.second.menu_text);
-    }
-    return entries;
-}
-
 #endif // FILE_PROCESSOR_HPP

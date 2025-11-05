@@ -35,6 +35,7 @@ FetchContent_MakeAvailable(ftxui)
 # Quellendateien Ihres Projekts definieren
 add_executable(tfm 
     main.cpp
+    filemanagerui.cpp
     fileprocessor.cpp
 ) 
 
