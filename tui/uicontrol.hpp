@@ -5,29 +5,29 @@
 #include <string>
 #include <vector>
 
-// 1. Eindeutige ID für jede mögliche Aktion
-enum class ActionID {
-    SelectDirectory,
-    FindZeroBytes,
-    FindDuplicates,
-    DeleteMarkedFiles,
-    Quit
-};
-
-// 2. Metadaten-Struktur für jede Aktion
 struct ActionInfo {
     char shortcut;        // Das globale Tastenkürzel
     std::string menu_text; // Der Text für das Menü/die Statusleiste
 };
 
-// 3. Zentrale Tabelle, die ID mit Metadaten verknüpft
+enum class ActionID {
+    SelectDirectory,
+    FindZeroBytes,
+    FindDuplicates,       // 'd' - Show duplicates
+    CalculateHashes,      // 'h' - Calculate hashes
+    ClearFilter,          // 'c' - Clear filter
+    DeleteMarkedFiles,    // 'D' - Delete
+    Quit                  // 'q'
+};
+
 inline const std::map<ActionID, ActionInfo> ActionMap = {
-    //^^^^ WICHTIG: inline keyword für C++17
     {ActionID::SelectDirectory,   {'p', "(p) Select Directory"}},
-    {ActionID::FindZeroBytes,     {'0', "(0) 0-Byte-Dateien anzeigen"}},
-    {ActionID::FindDuplicates,    {'d', "(d) Duplikate finden"}},
-    {ActionID::DeleteMarkedFiles, {'D', "(D) Löschen markierter Dateien"}},
-    {ActionID::Quit,              {'q', "(q) Beenden"}}
+    {ActionID::FindZeroBytes,     {'0', "(0) 0-Byte Files"}},
+    {ActionID::FindDuplicates,    {'d', "(d) Show Duplicates"}},
+    {ActionID::CalculateHashes,   {'h', "(h) Calculate Hashes"}},
+    {ActionID::ClearFilter,       {'c', "(c) Clear Filter"}},
+    {ActionID::DeleteMarkedFiles, {'D', "(D) Delete Marked"}},
+    {ActionID::Quit,              {'q', "(q) Quit"}}
 };
 
 // Optional: Helper-Funktion für Menu-Entries
