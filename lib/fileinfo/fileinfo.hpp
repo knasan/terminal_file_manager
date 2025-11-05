@@ -7,11 +7,13 @@ private:
     long long m_size;
     std::string m_hash;
     bool m_isDir;
-    bool m_isDuplicate = false;  // NEU: für UI-Highlighting
+    bool m_isDuplicate = false;
+    bool m_isParent = false;
+
 
 public:
-    FileInfo(const std::string& p, long long s, bool isDir)
-    : m_path(p), m_size(s), m_hash(""), m_isDir(isDir) {}
+    FileInfo(const std::string& p, long long s, bool isDir, bool isParent = false)
+        : m_path(p), m_size(s), m_hash(""), m_isDir(isDir), m_isParent(isParent) {}
 
     // Bestehende Getter...
     const std::string& getPath() const { return m_path; }
@@ -19,12 +21,21 @@ public:
     const std::string& getHash() const { return m_hash; }
     bool isDirectory() const { return m_isDir; }
     
-    // NEU: Für FTXUI
-    std::string getDisplayName() const {
+   std::string getDisplayName() const {
+        if (m_isParent) return "..";  // <-- Parent Dir
+        
         std::filesystem::path p(m_path);
         std::string name = p.filename().string();
+        
+        if (name.empty() && m_isDir) {
+            // Root oder current dir
+            return p.string();
+        }
+        
         return m_isDir ? name + "/" : name;
     }
+    
+    bool isParentDir() const { return m_isParent; }
     
     std::string getSizeFormatted() const {
         if (m_isDir) return "<DIR>";

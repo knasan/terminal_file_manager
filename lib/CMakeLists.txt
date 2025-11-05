@@ -1,6 +1,5 @@
 # lib/CMakeLists.txt
 add_library(fileinfo_lib STATIC
-    fileinfo/fileprocessor.cpp
     fileinfo/filescanner.cpp
 )
 

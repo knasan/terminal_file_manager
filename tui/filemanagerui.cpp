@@ -2,10 +2,10 @@
 #include "fileprocessoradapter.hpp"
 
 FileManagerUI::~FileManagerUI() {
-  // FTXUI bug workaround: Terminal cleanup requires output to properly restore state
-  // This ensures the terminal is left in a clean state even if the program
-  // terminates unexpectedly (e.g., via exception or early exit)
-  std::cout << "FileManager terminated. Final status: " << m_current_status 
+  // FTXUI bug workaround: Terminal cleanup requires output to properly restore
+  // state This ensures the terminal is left in a clean state even if the
+  // program terminates unexpectedly (e.g., via exception or early exit)
+  std::cout << "FileManager terminated. Final status: " << m_current_status
             << std::endl;
 }
 
@@ -70,40 +70,58 @@ void FileManagerUI::setupFilePanels() {
 }
 
 void FileManagerUI::initialize() {
-    FileProcessorAdapter fp(m_current_dir);
-    m_left_file_infos = fp.scanDirectory(true);  // mit . und ..
-    
-    updateMenuStrings(m_left_file_infos, m_left_panel_files);
-    
-    setupTopMenu();
-    setupFilePanels();
-    setupMainLayout();
+  FileProcessorAdapter fp(m_current_dir);
+  m_left_file_infos = fp.scanDirectory(true);
+  updateMenuStrings(m_left_file_infos, m_left_panel_files);
+  setupTopMenu();
+  setupFilePanels();
+  setupMainLayout();
 }
+
 void FileManagerUI::setupMainLayout() {
-  m_document =
-      Container::Vertical({m_top_menu, Renderer([] { return separator(); }),
-                           m_file_split_view | flex, Renderer([this] {
-                             return text("STATUS: " + m_current_status) |
-                                    color(Color::GrayLight) | hcenter;
-                           })});
+  m_document = Container::Vertical(
+      {m_top_menu,                           // Fixed height (1 Zeile)
+      //  Renderer([] { return separator(); }), // Fixed height (1 Zeile)
+       m_file_split_view | flex,             // <-- NIMMT DEN REST!
+       Renderer([this] {                     // Fixed height (1 Zeile)
+         return text("STATUS: " + m_current_status) | color(Color::GrayLight) |
+                hcenter;
+       })});
 }
 
 Component FileManagerUI::createLeftPanel() {
   return Renderer(m_left_menu, [this] {
-    return vbox({text(m_left_panel_path) | bold | color(Color::Green),
-                 separator(),
-                 m_left_menu->Render() | vscroll_indicator | frame}) |
-           border;
+    // Berechne verfügbare Höhe (Terminal - Header - Status - Margins)
+    int terminal_height = Terminal::Size().dimy;
+    int available_height = terminal_height - 6;  // 6 = Top Menu + Separators + Status + Borders
+    
+    return vbox({
+        text(m_left_panel_path) | bold | color(Color::Green),
+        separator(),
+        m_left_menu->Render() | 
+            vscroll_indicator | 
+            frame |
+            size(HEIGHT, EQUAL, available_height)  // Dynamisch!
+    }) | border;
   });
 }
 
 Component FileManagerUI::createRightPanel() {
   return Renderer(m_right_menu, [this] {
-    return vbox({text(m_right_panel_path) | bold | color(Color::Green),
-                 separator(),
-                 m_right_menu->Render() | vscroll_indicator | frame}) |
-           border;
+    // Berechne verfügbare Höhe (Terminal - Header - Status - Margins)
+    int terminal_height = Terminal::Size().dimy;
+    int available_height = terminal_height - 6;  // 6 = Top Menu + Separators + Status + Borders
+    
+    return vbox({
+        text(m_right_panel_path) | bold | color(Color::Green),
+        separator(),
+        m_right_menu->Render() | 
+            vscroll_indicator | 
+            frame |
+            size(HEIGHT, EQUAL, available_height)  // Dynamisch!
+    }) | border;
   });
+  
 }
 
 ActionID FileManagerUI::getActionIdByIndex(int index) {
@@ -138,21 +156,23 @@ void FileManagerUI::updateMenuStrings(const std::vector<FileInfo> &infos,
 
 // Helper methods
 bool FileManagerUI::handleDirectoryChange(const FileInfo &selected_info) {
+  // std::cout << "[DEBUG] Changing to: " << selected_info.getPath() << "\n";
+
   m_left_panel_path = selected_info.getPath();
 
-  FileProcessor fp(m_left_panel_path);
-  m_left_file_infos = fp.scanDirectory();
+  FileProcessorAdapter fp(m_left_panel_path);
+  m_left_file_infos = fp.scanDirectory(true);
+
+  // std::cout << "[DEBUG] Scanned " << m_left_file_infos.size() << "
+  // entries\n";
 
   updateMenuStrings(m_left_file_infos, m_left_panel_files);
 
-  // First, make sure it is within the valid range.
-  if (m_left_file_infos.empty()) {
-    m_left_selected = 0;
-  } else {
-    m_left_selected = std::min(m_left_selected,
-                               static_cast<int>(m_left_file_infos.size()) - 1);
-    m_left_selected = std::max(0, m_left_selected);
-  }
+  m_left_selected =
+      m_left_file_infos.empty()
+          ? 0
+          : std::clamp(m_left_selected, 0,
+                       static_cast<int>(m_left_file_infos.size()) - 1);
 
   m_current_status = "Directory changed: " + m_left_panel_path;
   return true;

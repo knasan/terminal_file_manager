@@ -1,4 +1,4 @@
-#include "fileprocessor.hpp"
+#include "fileprocessoradapter.hpp"
 #include "uicontrol.hpp"
 #include <ftxui/component/component.hpp>
 #include <ftxui/component/screen_interactive.hpp>
