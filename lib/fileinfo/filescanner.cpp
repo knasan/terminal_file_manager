@@ -10,7 +10,7 @@ std::vector<FileInfo> FileScanner::scanDirectory(
     std::vector<FileInfo> results;
     std::filesystem::path currentPath(path);
 
-    // Parent directory hinzufügen
+    // Add parent directory
     if (includeParent && !useRecursively) {
         if (currentPath.has_parent_path() && 
             currentPath != currentPath.root_path()) {
@@ -26,7 +26,7 @@ std::vector<FileInfo> FileScanner::scanDirectory(
         }
     }
 
-    // 2. Directory scannen
+    // 2. Directory scan
     try {
         if (useRecursively) {
             for (const auto& entry : std::filesystem::recursive_directory_iterator(path)) {
@@ -38,28 +38,28 @@ std::vector<FileInfo> FileScanner::scanDirectory(
             }
         }
     } catch (const std::filesystem::filesystem_error& e) {
-        // Fehler ignorieren oder loggen
+        // Ignore or log errors
     }
 
-    // 3. Sortieren: ".." zuerst, dann Ordner, dann Dateien (alphabetisch)
+    // Sorting order: ".." first, then folders, then files (alphabetical)
     std::sort(results.begin(), results.end(), 
         [&currentPath](const FileInfo& a, const FileInfo& b) {
             std::filesystem::path path_a(a.getPath());
             std::filesystem::path path_b(b.getPath());
             
-            // Regel 1: Parent-Dir (..) immer zuerst
+            // Rule 1: The parent directory (..) always comes first.
             bool a_is_parent = (path_a == currentPath.parent_path());
             bool b_is_parent = (path_b == currentPath.parent_path());
             
             if (a_is_parent && !b_is_parent) return true;
             if (!a_is_parent && b_is_parent) return false;
             
-            // Regel 2: Directories vor Files
+            // Rule 2: Directories before files
             if (a.isDirectory() != b.isDirectory()) {
                 return a.isDirectory();
             }
             
-            // Regel 3: Alphabetisch nach Filename
+            // Rule 3: Alphabetical order by filename
             return path_a.filename().string() < path_b.filename().string();
         });
 

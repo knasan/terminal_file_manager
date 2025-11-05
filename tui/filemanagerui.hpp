@@ -18,17 +18,17 @@ private:
 
   // Paths and files
   std::string m_current_dir;
-  std::string m_left_panel_path;
-  std::vector<FileInfo> m_left_file_infos;
-  std::vector<std::string> m_left_panel_files;
+  std::string m_panel_path;
+  std::vector<FileInfo> m_file_infos;
+  std::vector<std::string> m_panel_files;
 
   // UI Components
   Component m_top_menu;
   Component m_left_menu;
   Component m_main_view;
   Component m_document;
-  Component createLeftPanel();
-  Component createLeftPanelWithTable();
+  Component createPanel();
+  Component createPanelWithTable();
 
   std::string m_current_status = "Ready.";
   ScreenInteractive m_screen = ScreenInteractive::TerminalOutput();
@@ -62,7 +62,7 @@ public:
   
   FileManagerUI()
       : m_current_dir(std::filesystem::current_path()),
-        m_left_panel_path(m_current_dir) {};
+        m_panel_path(m_current_dir) {};
   ~FileManagerUI();
 
   void initialize();

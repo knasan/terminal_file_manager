@@ -2,9 +2,6 @@
 #include "duplicatefinder.hpp"
 #include "fileprocessoradapter.hpp"
 
-//#include <chrono>
-//#include <thread>
-
 FileManagerUI::~FileManagerUI() {
   // FTXUI bug workaround: Terminal cleanup requires output to properly restore
   // state This ensures the terminal is left in a clean state even if the
@@ -42,12 +39,12 @@ void FileManagerUI::setupTopMenu() {
                });
 }
 
-// Hash-Berechnung für aktuelles Verzeichnis
+// Hash calculation for the current directory
 void FileManagerUI::calculateHashes() {
   FNV1A hasher;
   int count = 0;
 
-  for (auto &info : m_left_file_infos) {
+  for (auto &info : m_file_infos) {
     if (!info.isDirectory() && info.getFileSize() > 0 &&
         info.getHash().empty()) {
       std::string hash = hasher.calculateHash(info.getPath());
@@ -59,13 +56,13 @@ void FileManagerUI::calculateHashes() {
   m_current_status = "Calculated " + std::to_string(count) + " hashes";
 }
 
-// Duplikate anzeigen
+// Show duplicates
 void FileManagerUI::showDuplicates() {
   // Backup aller Files
-  m_all_files = m_left_file_infos;
+  m_all_files = m_file_infos;
 
-  // Duplikate finden und markieren
-  auto groups = DuplicateFinder::findDuplicates(m_left_file_infos);
+  // Find and mark duplicates
+  auto groups = DuplicateFinder::findDuplicates(m_file_infos);
 
   if (groups.empty()) {
     m_current_status =
@@ -73,16 +70,16 @@ void FileManagerUI::showDuplicates() {
     return;
   }
 
-  // Nur Duplikate behalten
+  // Only keep duplicates.
   m_duplicate_files.clear();
-  for (const auto &info : m_left_file_infos) {
+  for (const auto &info : m_file_infos) {
     if (info.isDuplicate()) {
       m_duplicate_files.push_back(info);
     }
   }
 
-  m_left_file_infos = m_duplicate_files;
-  updateMenuStrings(m_left_file_infos, m_left_panel_files);
+  m_file_infos = m_duplicate_files;
+  updateMenuStrings(m_file_infos, m_panel_files);
   m_left_selected = 0;
   m_show_duplicates_only = true;
 
@@ -93,7 +90,7 @@ void FileManagerUI::showDuplicates() {
                      " wasted). Press 'c' to clear filter.";
 }
 
-// Filter zurücksetzen
+// Reset filter
 void FileManagerUI::clearFilter() {
   if (!m_show_duplicates_only) {
     m_current_status = "No filter active.";
@@ -101,8 +98,8 @@ void FileManagerUI::clearFilter() {
   }
 
   // Restore original files
-  m_left_file_infos = m_all_files;
-  updateMenuStrings(m_left_file_infos, m_left_panel_files);
+  m_file_infos = m_all_files;
+  updateMenuStrings(m_file_infos, m_panel_files);
   m_left_selected = 0;
   m_show_duplicates_only = false;
 
@@ -115,15 +112,15 @@ void FileManagerUI::setupFilePanels() {
     const FileInfo *info = nullptr;
     auto index = state.state;
 
-    if (index >= 0 && index < static_cast<int>(m_left_file_infos.size())) {
-      info = &m_left_file_infos[index];
+    if (index >= 0 && index < static_cast<int>(m_file_infos.size())) {
+      info = &m_file_infos[index];
     }
 
     auto name_element = text(state.label);
     Element size_element = text("");
 
-    // Finde FileInfo über Label
-    for (const auto &file_info : m_left_file_infos) {
+    // Find FileInfo via Label
+    for (const auto &file_info : m_file_infos) {
       if (file_info.getDisplayName() == state.label) {
         info = &file_info;
         break;
@@ -131,7 +128,7 @@ void FileManagerUI::setupFilePanels() {
     }
 
     if (info) {
-      // Farbe anwenden
+      // Apply color
       switch (info->getColorCode()) {
       case 1:
         name_element = name_element | color(Color::Red);
@@ -149,11 +146,11 @@ void FileManagerUI::setupFilePanels() {
         break;
       }
 
-      // Größe
+      // Size
       size_element = text(info->getSizeFormatted()) | color(Color::GrayLight);
     }
 
-    // Tabellen-Row
+    // Table row
     auto row = hbox({name_element | size(WIDTH, EQUAL, 40), filler(),
                      size_element | align_right});
 
@@ -164,13 +161,13 @@ void FileManagerUI::setupFilePanels() {
     return row;
   };
 
-  m_left_menu = Menu(&m_left_panel_files, &m_left_selected, menu_option);
+  m_left_menu = Menu(&m_panel_files, &m_left_selected, menu_option);
 
-  // Event handling wie gehabt
+  // Event handling as usual
   m_left_menu = m_left_menu | CatchEvent([this](Event event) {
-                  if (event == Event::Return && !m_left_file_infos.empty()) {
+                  if (event == Event::Return && !m_file_infos.empty()) {
                     if (auto *selected_info =
-                            safe_at(m_left_file_infos, m_left_selected)) {
+                            safe_at(m_file_infos, m_left_selected)) {
                       return handleFileSelection(*selected_info);
                     }
                   }
@@ -182,10 +179,10 @@ void FileManagerUI::setupFilePanels() {
                   return false;
                 });
 
-  m_main_view = createLeftPanelWithTable();
+  m_main_view = createPanelWithTable();
 }
 
-Component FileManagerUI::createLeftPanelWithTable() {
+Component FileManagerUI::createPanelWithTable() {
   return Renderer(m_left_menu, [this] {
     int terminal_height = Terminal::Size().dimy;
 
@@ -194,12 +191,12 @@ Component FileManagerUI::createLeftPanelWithTable() {
     // Total: 9
     int available_height = std::max(5, terminal_height - 9);  // Min 5 Zeilen
 
-    // Tabellen-Header
+    // Table header
     auto header = hbox({text("Name") | bold | size(WIDTH, EQUAL, 40), filler(),
                         text("Size") | bold | align_right}) |
                   color(Color::Cyan);
 
-    return vbox({text(m_left_panel_path) | bold | color(Color::Green),
+    return vbox({text(m_panel_path) | bold | color(Color::Green),
                  separator(), header, separator(),
                  m_left_menu->Render() | vscroll_indicator | frame |
                      size(HEIGHT, EQUAL, available_height)}) |
@@ -209,15 +206,12 @@ Component FileManagerUI::createLeftPanelWithTable() {
 
 void FileManagerUI::initialize() {  
   FileProcessorAdapter fp(m_current_dir);
-  m_left_file_infos = fp.scanDirectory(true);
-  updateMenuStrings(m_left_file_infos, m_left_panel_files);
+  m_file_infos = fp.scanDirectory(true);
+  updateMenuStrings(m_file_infos, m_panel_files);
   
   setupTopMenu();
-  
   setupFilePanels();
-  
   setupMainLayout();
-
 }
 
 void FileManagerUI::setupMainLayout() {
@@ -230,20 +224,20 @@ void FileManagerUI::setupMainLayout() {
        })});
 }
 
-Component FileManagerUI::createLeftPanel() {
+Component FileManagerUI::createPanel() {
   return Renderer(m_left_menu, [this] {
     int terminal_height = Terminal::Size().dimy;
     int available_height = terminal_height - 6;
 
-    // Custom Rendering mit Farben
+    // Custom Rendering with colors
     std::vector<Element> entries;
-    for (size_t i = 0; i < m_left_file_infos.size(); ++i) {
-      const auto &info = m_left_file_infos[i];
+    for (size_t i = 0; i < m_file_infos.size(); ++i) {
+      const auto &info = m_file_infos[i];
       bool selected = (i == static_cast<size_t>(m_left_selected));
 
       auto element = text(info.getDisplayName());
 
-      // Farbe anwenden
+      // use color
       switch (info.getColorCode()) {
       case 1:
         element = element | color(Color::Red);
@@ -269,7 +263,7 @@ Component FileManagerUI::createLeftPanel() {
       entries.push_back(element);
     }
 
-    return vbox({text(m_left_panel_path) | bold | color(Color::Green),
+    return vbox({text(m_panel_path) | bold | color(Color::Green),
                  //separator(),
                  vbox(entries) | vscroll_indicator | frame |
                      size(HEIGHT, EQUAL, available_height)}) |
@@ -309,20 +303,20 @@ void FileManagerUI::updateMenuStrings(const std::vector<FileInfo> &infos,
 
 // Helper methods
 bool FileManagerUI::handleDirectoryChange(const FileInfo &selected_info) {
-  m_left_panel_path = selected_info.getPath();
+  m_panel_path = selected_info.getPath();
 
-  FileProcessorAdapter fp(m_left_panel_path);
-  m_left_file_infos = fp.scanDirectory(true);
+  FileProcessorAdapter fp(m_panel_path);
+  m_file_infos = fp.scanDirectory(true);
 
-  updateMenuStrings(m_left_file_infos, m_left_panel_files);
+  updateMenuStrings(m_file_infos, m_panel_files);
 
   m_left_selected =
-      m_left_file_infos.empty()
+      m_file_infos.empty()
           ? 0
           : std::clamp(m_left_selected, 0,
-                       static_cast<int>(m_left_file_infos.size()) - 1);
+                       static_cast<int>(m_file_infos.size()) - 1);
 
-  m_current_status = "Directory changed: " + m_left_panel_path;
+  m_current_status = "Directory changed: " + m_panel_path;
   return true;
 }
 

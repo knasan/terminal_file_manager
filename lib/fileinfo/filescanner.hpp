@@ -16,7 +16,7 @@ public:
 
   std::vector<FileInfo> scanDirectory(const std::string &path,
                                       bool useRecursively = false,
-                                      bool includeParent = false) const;  // <-- NEU!
+                                      bool includeParent = false) const;
 
 private:
   void processEntry(const std::filesystem::directory_entry &entry,
@@ -34,7 +34,7 @@ private:
 
     FileInfo info(entry.path().string(), size, isDir);
 
-    // Hash nur für non-empty regular files
+    // Hash only for non-empty regular files
     if (!isDir && size > 0) {
       std::string hash = hashCalculator.calculateHash(info.getPath());
       info.setHash(hash);
