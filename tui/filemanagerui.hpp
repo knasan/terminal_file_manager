@@ -34,6 +34,9 @@ private:
   Component m_file_split_view;
   Component m_document;
 
+  Component createLeftPanelWithTable();
+  Component createRightPanelWithTable();
+
   std::string m_current_status = "Ready.";
   ScreenInteractive m_screen = ScreenInteractive::TerminalOutput();
 
@@ -60,7 +63,7 @@ public:
 
   FileManagerUI()
       : m_current_dir(std::filesystem::current_path()),
-        m_left_panel_path(m_current_dir), m_right_panel_path(""){};
+        m_left_panel_path(m_current_dir), m_right_panel_path("") {};
   ~FileManagerUI();
 
   void initialize();

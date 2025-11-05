@@ -38,10 +38,85 @@ void FileManagerUI::setupTopMenu() {
                });
 }
 
-void FileManagerUI::setupFilePanels() {
-  m_left_menu = Menu(&m_left_panel_files, &m_left_selected);
-  m_right_menu = Menu(&m_right_panel_files, &m_right_selected);
+// void FileManagerUI::setupFilePanels() {
+//   m_left_menu = Menu(&m_left_panel_files, &m_left_selected);
+//   m_right_menu = Menu(&m_right_panel_files, &m_right_selected);
 
+//   m_left_menu = m_left_menu | CatchEvent([this](Event event) {
+//                   if (event == Event::Return && !m_left_file_infos.empty()) {
+//                     if (auto *selected_info =
+//                             safe_at(m_left_file_infos, m_left_selected)) {
+//                       return handleFileSelection(*selected_info);
+//                     }
+//                   }
+
+//                   if (event.is_character()) {
+//                     return handleGlobalShortcut(event.character()[0]);
+//                   }
+
+//                   return false;
+//                 });
+
+//   // 3. Panels rendern
+//   auto left_panel =
+//       FileManagerUI::createLeftPanel(); // createPanel(m_left_menu,
+//                                         // m_left_panel_path);
+//   auto right_panel =
+//       FileManagerUI::createRightPanel(); // createPanel(m_right_menu,
+//                                          // m_right_panel_path);
+
+//   m_file_split_view =
+//       ResizableSplitLeft(left_panel, right_panel, &m_left_panel_size);
+// }
+
+void FileManagerUI::setupFilePanels() {
+  // Custom MenuOption mit Tabellen-Layout
+  auto menu_option = MenuOption::Vertical();
+  menu_option.entries_option.transform = [this](EntryState state) {
+    // Finde das entsprechende FileInfo
+    const FileInfo* info = nullptr;
+    if (state.state >= 0 && state.state < static_cast<int>(m_left_file_infos.size())) {
+      info = &m_left_file_infos[state.state];
+    }
+    
+    // Tabellen-Layout: Name (links) | Größe (rechts)
+    auto name_element = text(state.label);
+    Element size_element = text("");
+    
+    if (info) {
+      // Farbe für Name
+      switch (info->getColorCode()) {
+        case 1: name_element = name_element | color(Color::Red); break;
+        case 2: name_element = name_element | color(Color::Green); break;
+        case 3: name_element = name_element | color(Color::Yellow); break;
+        case 4: name_element = name_element | color(Color::Blue); break;
+        default: break;
+      }
+      
+      // Größe
+      size_element = text(info->getSizeFormatted()) | color(Color::GrayLight);
+    }
+    
+    // Kombiniere Name und Größe
+    auto row = hbox({
+      name_element | size(WIDTH, EQUAL, 40),  // Name: 40 Zeichen breit
+      filler(),                                 // Spacer
+      size_element | align_right                // Größe: rechts-aligned
+    });
+    
+    if (state.focused) {
+      row = row | inverted | bold;
+    }
+    
+    return row;
+  };
+
+  m_left_menu = Menu(&m_left_panel_files, &m_left_selected, menu_option);
+  
+  // Für right panel gleiche Option oder separate
+  m_right_menu = Menu(&m_right_panel_files, &m_right_selected, menu_option);
+
+  // Event handling wie gehabt
   m_left_menu = m_left_menu | CatchEvent([this](Event event) {
                   if (event == Event::Return && !m_left_file_infos.empty()) {
                     if (auto *selected_info =
@@ -57,16 +132,61 @@ void FileManagerUI::setupFilePanels() {
                   return false;
                 });
 
-  // 3. Panels rendern
-  auto left_panel =
-      FileManagerUI::createLeftPanel(); // createPanel(m_left_menu,
-                                        // m_left_panel_path);
-  auto right_panel =
-      FileManagerUI::createRightPanel(); // createPanel(m_right_menu,
-                                         // m_right_panel_path);
+  // Panels mit Header
+  auto left_panel = createLeftPanelWithTable();
+  auto right_panel = createRightPanelWithTable();
 
   m_file_split_view =
       ResizableSplitLeft(left_panel, right_panel, &m_left_panel_size);
+}
+
+Component FileManagerUI::createLeftPanelWithTable() {
+  return Renderer(m_left_menu, [this] {
+    int terminal_height = Terminal::Size().dimy;
+    int available_height = terminal_height - 7;  // +1 für Header
+    
+    // Tabellen-Header
+    auto header = hbox({
+      text("Name") | bold | size(WIDTH, EQUAL, 40),
+      filler(),
+      text("Size") | bold | align_right
+    }) | color(Color::Cyan);
+    
+    return vbox({
+        text(m_left_panel_path) | bold | color(Color::Green),
+        separator(),
+        header,
+        separator(),
+        m_left_menu->Render() | 
+            vscroll_indicator | 
+            frame |
+            size(HEIGHT, EQUAL, available_height)
+    }) | border;
+  });
+}
+
+Component FileManagerUI::createRightPanelWithTable() {
+  return Renderer(m_right_menu, [this] {
+    int terminal_height = Terminal::Size().dimy;
+    int available_height = terminal_height - 7;
+    
+    auto header = hbox({
+      text("Name") | bold | size(WIDTH, EQUAL, 40),
+      filler(),
+      text("Size") | bold | align_right
+    }) | color(Color::Cyan);
+    
+    return vbox({
+        text(m_right_panel_path) | bold | color(Color::Green),
+        separator(),
+        header,
+        separator(),
+        m_right_menu->Render() | 
+            vscroll_indicator | 
+            frame |
+            size(HEIGHT, EQUAL, available_height)
+    }) | border;
+  });
 }
 
 void FileManagerUI::initialize() {

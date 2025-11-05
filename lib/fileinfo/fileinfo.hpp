@@ -58,7 +58,6 @@ public:
         return 7;                                    // Weiß: Normal
     }
 
-    
     std::string getSizeFormatted() const {
         if (m_isDir) return "<DIR>";
         if (m_size == 0) return "0 B";
