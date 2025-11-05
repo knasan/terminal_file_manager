@@ -1,4 +1,8 @@
 {
+    "cmake.options.statusBarVisibility": "visible",
+    "cmake.configureOnOpen": false, // Nicht auto-configure
+    "cmake.buildBeforeRun": true, // Auto-build vor Run
+    "cmake.showSystemKits": false, // System-Kits ausblenden
     "files.associations": {
         "array": "cpp",
         "complex": "cpp",

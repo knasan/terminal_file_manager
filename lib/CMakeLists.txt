@@ -10,7 +10,7 @@ target_include_directories(fileinfo_lib PUBLIC
 
 target_compile_features(fileinfo_lib PUBLIC cxx_std_17)
 
-# Optional: Header-Files für IDE
+# Optional: Header-Files for IDE ONLY
 #target_sources(fileinfo_lib PUBLIC
 #    FILE_SET HEADERS
 #    BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/fileinfo

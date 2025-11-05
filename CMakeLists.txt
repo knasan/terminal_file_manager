@@ -1,3 +1,5 @@
+# tui/CMakeLists.txt
+
 # Mindestanforderung an CMake festlegen
 cmake_minimum_required(VERSION 4.1)
 
