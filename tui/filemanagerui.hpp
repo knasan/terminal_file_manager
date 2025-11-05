@@ -23,6 +23,7 @@ private:
   std::string m_left_panel_path;
   std::string m_right_panel_path;
   std::vector<FileInfo> m_left_file_infos;
+  std::vector<FileInfo> m_right_file_infos;
   std::vector<std::string> m_left_panel_files;
   std::vector<std::string> m_right_panel_files;
 

@@ -91,34 +91,76 @@ void FileManagerUI::setupMainLayout() {
 
 Component FileManagerUI::createLeftPanel() {
   return Renderer(m_left_menu, [this] {
-    // Berechne verfügbare Höhe (Terminal - Header - Status - Margins)
     int terminal_height = Terminal::Size().dimy;
-    int available_height = terminal_height - 6;  // 6 = Top Menu + Separators + Status + Borders
+    int available_height = terminal_height - 6;
+    
+    // Custom Rendering mit Farben
+    std::vector<Element> entries;
+    for (size_t i = 0; i < m_left_file_infos.size(); ++i) {
+        const auto& info = m_left_file_infos[i];
+        bool selected = (i == static_cast<size_t>(m_left_selected));
+        
+        auto element = text(info.getDisplayName());
+        
+        // Farbe anwenden
+        switch (info.getColorCode()) {
+            case 1: element = element | color(Color::Red); break;       // 0-Byte
+            case 2: element = element | color(Color::Green); break;     // Executable
+            case 3: element = element | color(Color::Yellow); break;    // Duplicate
+            case 4: element = element | color(Color::Blue); break;      // Directory
+            default: element = element | color(Color::White); break;    // Normal
+        }
+        
+        if (selected) {
+            element = element | inverted | bold;
+        }
+        
+        entries.push_back(element);
+    }
     
     return vbox({
         text(m_left_panel_path) | bold | color(Color::Green),
         separator(),
-        m_left_menu->Render() | 
-            vscroll_indicator | 
-            frame |
-            size(HEIGHT, EQUAL, available_height)  // Dynamisch!
+        vbox(entries) | vscroll_indicator | frame | 
+            size(HEIGHT, EQUAL, available_height)
     }) | border;
   });
 }
 
 Component FileManagerUI::createRightPanel() {
   return Renderer(m_right_menu, [this] {
-    // Berechne verfügbare Höhe (Terminal - Header - Status - Margins)
     int terminal_height = Terminal::Size().dimy;
-    int available_height = terminal_height - 6;  // 6 = Top Menu + Separators + Status + Borders
+    int available_height = terminal_height - 6;
+    
+    // Custom Rendering mit Farben
+    std::vector<Element> entries;
+    for (size_t i = 0; i < m_right_file_infos.size(); ++i) {
+        const auto& info = m_right_file_infos[i];
+        bool selected = (i == static_cast<size_t>(m_left_selected));
+        
+        auto element = text(info.getDisplayName());
+        
+        // Farbe anwenden
+        switch (info.getColorCode()) {
+            case 1: element = element | color(Color::Red); break;       // 0-Byte
+            case 2: element = element | color(Color::Green); break;     // Executable
+            case 3: element = element | color(Color::Yellow); break;    // Duplicate
+            case 4: element = element | color(Color::Blue); break;      // Directory
+            default: element = element | color(Color::White); break;    // Normal
+        }
+        
+        if (selected) {
+            element = element | inverted | bold;
+        }
+        
+        entries.push_back(element);
+    }
     
     return vbox({
         text(m_right_panel_path) | bold | color(Color::Green),
         separator(),
-        m_right_menu->Render() | 
-            vscroll_indicator | 
-            frame |
-            size(HEIGHT, EQUAL, available_height)  // Dynamisch!
+        vbox(entries) | vscroll_indicator | frame | 
+            size(HEIGHT, EQUAL, available_height)
     }) | border;
   });
   

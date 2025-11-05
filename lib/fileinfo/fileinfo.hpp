@@ -10,6 +10,18 @@ private:
     bool m_isDuplicate = false;
     bool m_isParent = false;
 
+    bool isExecutable() const {
+        if (m_isDir) return false;
+        
+        namespace fs = std::filesystem;
+        try {
+            auto perms = fs::status(m_path).permissions();
+            return (perms & fs::perms::owner_exec) != fs::perms::none;
+        } catch (...) {
+            return false;
+        }
+    }
+
 
 public:
     FileInfo(const std::string& p, long long s, bool isDir, bool isParent = false)
@@ -36,6 +48,16 @@ public:
     }
     
     bool isParentDir() const { return m_isParent; }
+
+     // NEU: Farbe basierend auf Dateityp/Status
+    int getColorCode() const {
+        if (m_size == 0 && !m_isDir) return 1;      // Rot: 0-Byte Files
+        if (m_isDuplicate) return 3;                 // Gelb: Duplikate
+        if (m_isDir) return 4;                       // Blau: Directories
+        if (isExecutable()) return 2;                // Grün: Executables
+        return 7;                                    // Weiß: Normal
+    }
+
     
     std::string getSizeFormatted() const {
         if (m_isDir) return "<DIR>";
