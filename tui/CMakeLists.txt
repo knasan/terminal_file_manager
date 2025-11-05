@@ -7,12 +7,12 @@ FetchContent_Declare(ftxui
 
 FetchContent_MakeAvailable(ftxui)
 
-add_executable(dfinder_tui 
+add_executable(tfm 
     main.cpp
     filemanagerui.cpp
 )
 
-target_link_libraries(dfinder_tui PRIVATE 
+target_link_libraries(tfm PRIVATE 
     fileinfo_lib        # <-- fileprocessor.cpp
     ftxui::screen
     ftxui::dom
