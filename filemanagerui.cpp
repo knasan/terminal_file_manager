@@ -31,13 +31,14 @@ void FileManagerUI::getMenuEntries() {
 }
 
 /**
- * @brief Configure and install the top (horizontal) menu for the file manager UI.
+ * @brief Configure and install the top (horizontal) menu for the file manager
+ * UI.
  *
- * This function populates the internal menu entry list, constructs the top-level
- * Menu widget (using a horizontal layout), and attaches an event handler that
- * responds to activation (Return) events. The handler resolves the currently
- * selected menu entry to an ActionID via getActionIdByIndex and dispatches the
- * corresponding action:
+ * This function populates the internal menu entry list, constructs the
+ * top-level Menu widget (using a horizontal layout), and attaches an event
+ * handler that responds to activation (Return) events. The handler resolves the
+ * currently selected menu entry to an ActionID via getActionIdByIndex and
+ * dispatches the corresponding action:
  *
  * - If the resolved ActionID == ActionID::Quit, the application screen's Exit()
  *   method is invoked to terminate the UI.
@@ -62,11 +63,11 @@ void FileManagerUI::getMenuEntries() {
  * - The function does not return a value.
  */
 void FileManagerUI::setupTopMenu() {
- getMenuEntries();
+  getMenuEntries();
   m_top_menu =
       Menu(&m_menu_entries, &m_top_menu_selected, MenuOption::Horizontal());
 
- m_top_menu = m_top_menu | CatchEvent([&](Event event) {
+  m_top_menu = m_top_menu | CatchEvent([&](Event event) {
                  if (event == Event::Return) {
                    ActionID action_id = getActionIdByIndex(m_top_menu_selected);
                    if (action_id == ActionID::Quit) {
@@ -115,15 +116,15 @@ void FileManagerUI::setupTopMenu() {
 
 /**
  * @brief Sets up the file panels in the file manager UI.
- * 
- * Initializes and configures two menu panels (left and right) for file navigation.
- * Each panel consists of:
+ *
+ * Initializes and configures two menu panels (left and right) for file
+ * navigation. Each panel consists of:
  * - A menu component to display files
  * - Event handling for file selection (Enter key)
  * - Event handling for global shortcuts
  * - A panel layout with path display
- * 
- * The panels are arranged in a resizable split view where the left panel's size 
+ *
+ * The panels are arranged in a resizable split view where the left panel's size
  * can be adjusted.
  */
 void FileManagerUI::setupFilePanels() {
@@ -200,12 +201,14 @@ void FileManagerUI::setupMainLayout() {
                            })});
 }
 
-Component FileManagerUI::createPanel(Component menu, const std::string &path) {
-  return Renderer(menu, [&, path] {
-    return vbox({text(path) | bold | color(Color::Green), separator(),
-                 menu->Render() | vscroll_indicator | frame}) |
-           border;
-  });
+Component FileManagerUI::createPanel(Component menu,
+                                     const std::string &path_ref) {
+  return Renderer(
+      menu, [menu, &path_ref] { // menu by value, path by ref zu member
+        return vbox({text(path_ref) | bold | color(Color::Green), separator(),
+                     menu->Render() | vscroll_indicator | frame}) |
+               border;
+      });
 }
 
 ActionID FileManagerUI::getActionIdByIndex(int index) {
@@ -216,12 +219,12 @@ ActionID FileManagerUI::getActionIdByIndex(int index) {
 
 /**
  * @brief Runs the main event loop of the file manager UI.
- * 
+ *
  * Sets up a global event handler that processes character input events
- * through handleGlobalShortcut(). Starts the screen loop with the 
+ * through handleGlobalShortcut(). Starts the screen loop with the
  * configured event handler. When the loop exits, prints final status
  * message.
- * 
+ *
  * @note A long cout string is required at the end for proper FXTUI operation
  */
 void FileManagerUI::run() {
@@ -247,7 +250,7 @@ FileManagerUI::fileInfoToMenuStrings(const std::vector<FileInfo> &infos) {
 }
 
 // Helper methods
-bool FileManagerUI::handleDirectoryChange(const FileInfo& selected_info) {
+bool FileManagerUI::handleDirectoryChange(const FileInfo &selected_info) {
   // std::cout << "[DEBUG] Vor Verzeichniswechsel: selected=" << m_left_selected
   //           << ", old_size=" << m_left_panel_files.size() << "\n";
 
@@ -258,14 +261,15 @@ bool FileManagerUI::handleDirectoryChange(const FileInfo& selected_info) {
 
   // <<< Hier die entscheidende Korrektur: Selected-Index absichern!
   if (m_left_file_infos.empty()) {
-      m_left_selected = 0; // Bleibt 0, aber zur Sicherheit
+    m_left_selected = 0; // Bleibt 0, aber zur Sicherheit
   } else {
-      // Stellen Sie sicher, dass der Index nicht außerhalb des neuen Bereichs liegt.
-      // Da wir in diesem Fall neu laden, setzen wir einfach auf 0.
-      m_left_selected = 0;
+    // Stellen Sie sicher, dass der Index nicht außerhalb des neuen Bereichs
+    // liegt. Da wir in diesem Fall neu laden, setzen wir einfach auf 0.
+    m_left_selected = 0;
   }
 
-  // std::cout << "[DEBUG] Nach Verzeichniswechsel: selected=" << m_left_selected
+  // std::cout << "[DEBUG] Nach Verzeichniswechsel: selected=" <<
+  // m_left_selected
   //            << ", new_size=" << m_left_panel_files.size() << "\n";
 
   m_current_status = "Directory changed: " + m_left_panel_path;
