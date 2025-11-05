@@ -14,6 +14,12 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     add_compile_options(/W4 /permissive- /w44265 /w44062)
 endif()
 
+
+if(NOT CMAKE_BUILD_TYPE)
+    # Setzt den Standard auf Debug, wenn kein Build-Typ über die Kommandozeile angegeben wird
+    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build." FORCE)
+endif()
+
 # Library
 add_subdirectory(lib)
 

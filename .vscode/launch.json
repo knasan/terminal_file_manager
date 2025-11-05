@@ -5,10 +5,10 @@
             "name": "Debug C++ (tfm)",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/tui/tui/tfm",
+            "program": "${workspaceFolder}/build/tui/tui/tfm", // ✅ Ihr spezifischer Pfad
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/build",
+            "cwd": "${workspaceFolder}", // Startet das Programm vom Projekt-Root
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
@@ -19,14 +19,8 @@
                     "ignoreFailures": true
                 }
             ],
-            "preLaunchTask": "cmake build"
+            "preLaunchTask": "cmake build" // Stellt sicher, dass der Build Task existiert
         },
-        {
-            "name": "CMake: CMake Script",
-            "type": "cmake",
-            "request": "launch",
-            "cmakeDebugType": "script",
-            "scriptPath": "${file}"
-        }
+        // ... (Weitere Konfigurationen)
     ]
 }
