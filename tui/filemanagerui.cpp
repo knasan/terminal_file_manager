@@ -58,7 +58,7 @@ void FileManagerUI::calculateHashes() {
 
 // Show duplicates
 void FileManagerUI::showDuplicates() {
-  // Backup aller Files
+  //Backup of all files
   m_all_files = m_file_infos;
 
   // Find and mark duplicates
@@ -79,11 +79,15 @@ void FileManagerUI::showDuplicates() {
   }
 
   m_file_infos = m_duplicate_files;
+
+  // IMPORTANT: Show full paths for duplicates!
+  m_show_full_paths = true;
+
   updateMenuStrings(m_file_infos, m_panel_files);
   m_selected = 0;
   m_show_duplicates_only = true;
 
-  // Status mit Wasted Space
+  // Status with Wasted Space
   long long wasted = DuplicateFinder::calculateWastedSpace(groups);
   m_current_status = "Showing " + std::to_string(m_duplicate_files.size()) +
                      " duplicates (" + DuplicateFinder::formatBytes(wasted) +
@@ -99,6 +103,10 @@ void FileManagerUI::clearFilter() {
 
   // Restore original files
   m_file_infos = m_all_files;
+
+  // IMPORTANT: back to displayName!
+  m_show_full_paths = false;
+
   updateMenuStrings(m_file_infos, m_panel_files);
   m_selected = 0;
   m_show_duplicates_only = false;
@@ -110,22 +118,21 @@ void FileManagerUI::setupFilePanels() {
   auto menu_option = MenuOption::Vertical();
   menu_option.entries_option.transform = [this](EntryState state) {
     const FileInfo *info = nullptr;
-    auto index = state.state;
-
-    if (index >= 0 && index < static_cast<int>(m_file_infos.size())) {
-      info = &m_file_infos[index];
-    }
-
-    auto name_element = text(state.label);
-    Element size_element = text("");
 
     // Find FileInfo via Label
     for (const auto &file_info : m_file_infos) {
-      if (file_info.getDisplayName() == state.label) {
+      // IMPORTANT: The comparison must take both modes into account!
+      std::string label_to_compare =
+          m_show_full_paths ? file_info.getPath() : file_info.getDisplayName();
+
+      if (label_to_compare == state.label) {
         info = &file_info;
         break;
       }
     }
+
+    auto name_element = text(state.label);
+    Element size_element = text("");
 
     if (info) {
       // Apply color
@@ -146,13 +153,13 @@ void FileManagerUI::setupFilePanels() {
         break;
       }
 
-      // Size
       size_element = text(info->getSizeFormatted()) | color(Color::GrayLight);
     }
 
     // Table row
-    auto row = hbox({name_element | size(WIDTH, EQUAL, 40), filler(),
-                     size_element | align_right});
+    auto row =
+        hbox({name_element | size(WIDTH, EQUAL, 60), // More space for trails!
+              filler(), size_element | align_right});
 
     if (state.focused) {
       row = row | inverted | bold;
@@ -163,21 +170,20 @@ void FileManagerUI::setupFilePanels() {
 
   m_menu = Menu(&m_panel_files, &m_selected, menu_option);
 
-  // Event handling as usual
+  // Event handling...
   m_menu = m_menu | CatchEvent([this](Event event) {
-                  if (event == Event::Return && !m_file_infos.empty()) {
-                    if (auto *selected_info =
-                            safe_at(m_file_infos, m_selected)) {
-                      return handleFileSelection(*selected_info);
-                    }
-                  }
+             if (event == Event::Return && !m_file_infos.empty()) {
+               if (auto *selected_info = safe_at(m_file_infos, m_selected)) {
+                 return handleFileSelection(*selected_info);
+               }
+             }
 
-                  if (event.is_character()) {
-                    return handleGlobalShortcut(event.character()[0]);
-                  }
+             if (event.is_character()) {
+               return handleGlobalShortcut(event.character()[0]);
+             }
 
-                  return false;
-                });
+             return false;
+           });
 
   m_main_view = createPanelWithTable();
 }
@@ -189,39 +195,38 @@ Component FileManagerUI::createPanelWithTable() {
     // Layout: Top(1) + Sep(1) + Status(1) = 3
     // Panel:  Border(2) + Path(1) + Sep(1) + Header(1) + Sep(1) = 6
     // Total: 9
-    int available_height = std::max(5, terminal_height - 9);  // Min 5 Zeilen
+    int available_height = std::max(5, terminal_height - 9); // Min 5 Zeilen
 
     // Table header
     auto header = hbox({text("Name") | bold | size(WIDTH, EQUAL, 40), filler(),
                         text("Size") | bold | align_right}) |
                   color(Color::Cyan);
 
-    return vbox({text(m_panel_path) | bold | color(Color::Green),
-                 separator(), header, separator(),
+    return vbox({text(m_panel_path) | bold | color(Color::Green), separator(),
+                 header, separator(),
                  m_menu->Render() | vscroll_indicator | frame |
                      size(HEIGHT, EQUAL, available_height)}) |
            border;
   });
 }
 
-void FileManagerUI::initialize() {  
+void FileManagerUI::initialize() {
   FileProcessorAdapter fp(m_current_dir);
   m_file_infos = fp.scanDirectory(true);
   updateMenuStrings(m_file_infos, m_panel_files);
-  
+
   setupTopMenu();
   setupFilePanels();
   setupMainLayout();
 }
 
 void FileManagerUI::setupMainLayout() {
-  m_document = Container::Vertical(
-      {m_top_menu,
-       Renderer([] { return separator(); }),
-       m_main_view | flex, Renderer([this] {
-         return text("STATUS: " + m_current_status) | color(Color::GrayLight) |
-                hcenter;
-       })});
+  m_document =
+      Container::Vertical({m_top_menu, Renderer([] { return separator(); }),
+                           m_main_view | flex, Renderer([this] {
+                             return text("STATUS: " + m_current_status) |
+                                    color(Color::GrayLight) | hcenter;
+                           })});
 }
 
 Component FileManagerUI::createPanel() {
@@ -232,13 +237,13 @@ Component FileManagerUI::createPanel() {
     // Custom Rendering with colors
     std::vector<Element> entries;
     for (size_t i = 0; i < m_file_infos.size(); ++i) {
-      const auto &info = m_file_infos[i];
+      const auto &file_info = m_file_infos[i];
       bool selected = (i == static_cast<size_t>(m_selected));
 
-      auto element = text(info.getDisplayName());
+      auto element = text(file_info.getPath());
 
       // use color
-      switch (info.getColorCode()) {
+      switch (file_info.getColorCode()) {
       case 1:
         element = element | color(Color::Red);
         break; // 0-Byte
@@ -264,7 +269,7 @@ Component FileManagerUI::createPanel() {
     }
 
     return vbox({text(m_panel_path) | bold | color(Color::Green),
-                 //separator(),
+                 // separator(),
                  vbox(entries) | vscroll_indicator | frame |
                      size(HEIGHT, EQUAL, available_height)}) |
            border;
@@ -296,25 +301,29 @@ void FileManagerUI::updateMenuStrings(const std::vector<FileInfo> &infos,
                                       std::vector<std::string> &target) {
   target.clear();
   target.reserve(infos.size());
+
   for (const auto &info : infos) {
-    target.push_back(info.getDisplayName());
+    if (m_show_full_paths) {
+      target.push_back(info.getPath()); // fullPath
+    } else {
+      target.push_back(info.getDisplayName()); // file name
+    }
   }
 }
 
 // Helper methods
-bool FileManagerUI::handleDirectoryChange(const FileInfo &selected_info) {
-  m_panel_path = selected_info.getPath();
+bool FileManagerUI::handleDirectoryChange(const FileInfo &selected_file_info) {
+  m_panel_path = selected_file_info.getPath();
 
   FileProcessorAdapter fp(m_panel_path);
   m_file_infos = fp.scanDirectory(true);
 
   updateMenuStrings(m_file_infos, m_panel_files);
 
-  m_selected =
-      m_file_infos.empty()
-          ? 0
-          : std::clamp(m_selected, 0,
-                       static_cast<int>(m_file_infos.size()) - 1);
+  m_selected = m_file_infos.empty()
+                   ? 0
+                   : std::clamp(m_selected, 0,
+                                static_cast<int>(m_file_infos.size()) - 1);
 
   m_current_status = "Directory changed: " + m_panel_path;
   return true;
@@ -324,8 +333,7 @@ bool FileManagerUI::handleFileSelection(const FileInfo &selected_info) {
   if (selected_info.isDirectory()) {
     return handleDirectoryChange(selected_info);
   } else {
-    m_current_status =
-        "File marked for processing: " + selected_info.getDisplayName();
+    m_current_status = "File marked for processing: " + selected_info.getPath();
     return true;
   }
 }
