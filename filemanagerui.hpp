@@ -46,23 +46,24 @@ private:
   // UI
   void setupTopMenu();
   void setupFilePanels();
-  void initialize();
   void getMenuEntries();
-  
-  void updateMenuStrings(const std::vector<FileInfo>& i,std::vector<std::string>& t);
-  
+
+  void updateMenuStrings(const std::vector<FileInfo> &i,
+                         std::vector<std::string> &t);
+
   Component createLeftPanel();
   Component createRightPanel();
-  
 
 public:
   int m_top_menu_selected = 0;
+
   FileManagerUI()
       : m_current_dir(std::filesystem::current_path()),
-        m_left_panel_path(m_current_dir), m_right_panel_path("") {
-    initialize();
-  }
-  
+        m_left_panel_path(m_current_dir), m_right_panel_path(""){};
+  ~FileManagerUI();
+
+  void initialize();
+
   void setupMainLayout();
   bool handleGlobalShortcut(char);
 

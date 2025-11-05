@@ -1,5 +1,13 @@
 #include "filemanagerui.hpp"
 
+FileManagerUI::~FileManagerUI() {
+  // FTXUI bug workaround: Terminal cleanup requires output to properly restore state
+  // This ensures the terminal is left in a clean state even if the program
+  // terminates unexpectedly (e.g., via exception or early exit)
+  std::cout << "FileManager terminated. Final status: " << m_current_status 
+            << std::endl;
+}
+
 void FileManagerUI::getMenuEntries() {
   m_menu_entries.clear();
   m_menu_entries.reserve(ActionMap.size()); // Pre-allocate
@@ -117,8 +125,6 @@ void FileManagerUI::run() {
   });
 
   m_screen.Loop(global_handler);
-  // IMPORTANT: fxtui will not work correctly without a long cout string.
-  std::cout << "Program ended. Last status: " << m_current_status << std::endl;
 }
 
 void FileManagerUI::updateMenuStrings(const std::vector<FileInfo> &infos,
@@ -147,15 +153,6 @@ bool FileManagerUI::handleDirectoryChange(const FileInfo &selected_info) {
                                static_cast<int>(m_left_file_infos.size()) - 1);
     m_left_selected = std::max(0, m_left_selected);
   }
-
-  // ODER kompakter:
-  /*
-    m_left_selected =
-      m_left_file_infos.empty()
-          ? 0
-          : std::clamp(m_left_selected, 0,
-                       static_cast<int>(m_left_file_infos.size()) - 1);
-  */
 
   m_current_status = "Directory changed: " + m_left_panel_path;
   return true;
