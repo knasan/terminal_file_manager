@@ -15,8 +15,6 @@ private:
   // UI State
   int m_left_selected = 0;
   int m_right_selected = 0;
-  static constexpr int DEFAULT_LEFT_PANEL_WIDTH = 100;
-  // int m_left_panel_size = DEFAULT_LEFT_PANEL_WIDTH;
 
   // Paths and files
   std::string m_current_dir;
@@ -24,20 +22,13 @@ private:
   std::vector<FileInfo> m_left_file_infos;
   std::vector<std::string> m_left_panel_files;
 
-  // std::string m_right_panel_path;
-  // std::vector<FileInfo> m_right_file_infos;
-  // std::vector<std::string> m_right_panel_files;
-
   // UI Components
   Component m_top_menu;
   Component m_left_menu;
-  // Component m_right_menu;
   Component m_main_view;
   Component m_document;
   Component createLeftPanel();
-  // Component createRightPanel();
   Component createLeftPanelWithTable();
-  // Component createRightPanelWithTable();
 
   std::string m_current_status = "Ready.";
   ScreenInteractive m_screen = ScreenInteractive::TerminalOutput();
@@ -68,10 +59,7 @@ private:
 
 public:
   int m_top_menu_selected = 0;
-
-  // FileManagerUI()
-  //     : m_current_dir(std::filesystem::current_path()),
-  //       m_left_panel_path(m_current_dir), m_right_panel_path("") {};
+  
   FileManagerUI()
       : m_current_dir(std::filesystem::current_path()),
         m_left_panel_path(m_current_dir) {};

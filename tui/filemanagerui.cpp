@@ -23,18 +23,8 @@ void FileManagerUI::getMenuEntries() {
 
 void FileManagerUI::setupTopMenu() {
   m_menu_entries = ::getMenuEntries(); // from uicontrol.hpp
-
-  // std::cout << "[DEBUG] Menu entries: " << m_menu_entries.size() << "\n";
-  // for (const auto &entry : m_menu_entries) {
-  //   std::cout << "  - " << entry << "\n";
-  // }
-
   m_top_menu =
       Menu(&m_menu_entries, &m_top_menu_selected, MenuOption::Horizontal());
-
-  // for DEBUG only
-  // std::this_thread::sleep_for(std::chrono::milliseconds(30000));
-
 
   m_top_menu = m_top_menu | CatchEvent([this](Event event) {
                  if (event == Event::Return) {
@@ -175,7 +165,6 @@ void FileManagerUI::setupFilePanels() {
   };
 
   m_left_menu = Menu(&m_left_panel_files, &m_left_selected, menu_option);
-  // m_right_menu = Menu(&m_right_panel_files, &m_right_selected, menu_option);
 
   // Event handling wie gehabt
   m_left_menu = m_left_menu | CatchEvent([this](Event event) {
@@ -192,13 +181,6 @@ void FileManagerUI::setupFilePanels() {
 
                   return false;
                 });
-
-  // Panels mit Header
-  // auto left_panel = createLeftPanelWithTable();
-  // auto right_panel = createRightPanelWithTable();
-
-  // m_file_split_view =
-  //     ResizableSplitLeft(left_panel, right_panel, &m_left_panel_size);
 
   m_main_view = createLeftPanelWithTable();
 }
@@ -225,41 +207,17 @@ Component FileManagerUI::createLeftPanelWithTable() {
   });
 }
 
-/*Component FileManagerUI::createRightPanelWithTable() {
-  return Renderer(m_right_menu, [this] {
-    int terminal_height = Terminal::Size().dimy;
-    int available_height = terminal_height - 7;
-
-    auto header = hbox({text("Name") | bold | size(WIDTH, EQUAL, 40), filler(),
-                        text("Size") | bold | align_right}) |
-                  color(Color::Cyan);
-
-    return vbox({text(m_right_panel_path) | bold | color(Color::Green),
-                 separator(), header, separator(),
-                 m_right_menu->Render() | vscroll_indicator | frame |
-                     size(HEIGHT, EQUAL, available_height)}) |
-           border;
-  });
-}*/
-
-void FileManagerUI::initialize() {
-  //  std::cout << "[DEBUG] initialize() start\n";
-  
+void FileManagerUI::initialize() {  
   FileProcessorAdapter fp(m_current_dir);
   m_left_file_infos = fp.scanDirectory(true);
   updateMenuStrings(m_left_file_infos, m_left_panel_files);
   
-  // std::cout << "[DEBUG] Calling setupTopMenu()\n";
   setupTopMenu();
   
-  // std::cout << "[DEBUG] Calling setupFilePanels()\n";
   setupFilePanels();
   
-  // std::cout << "[DEBUG] Calling setupMainLayout()\n";
   setupMainLayout();
-  
-  // std::cout << "[DEBUG] initialize() done\n";
-  // std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+
 }
 
 void FileManagerUI::setupMainLayout() {
@@ -318,53 +276,6 @@ Component FileManagerUI::createLeftPanel() {
            border;
   });
 }
-
-// Component FileManagerUI::createRightPanel() {
-//   return Renderer(m_right_menu, [this] {
-//     int terminal_height = Terminal::Size().dimy;
-//     int available_height = terminal_height - 6;
-
-//     // Custom Rendering mit Farben
-//     std::vector<Element> entries;
-//     for (size_t i = 0; i < m_right_file_infos.size(); ++i) {
-//       const auto &info = m_right_file_infos[i];
-//       bool selected = (i == static_cast<size_t>(m_left_selected));
-
-//       auto element = text(info.getDisplayName());
-
-//       // Farbe anwenden
-//       switch (info.getColorCode()) {
-//       case 1:
-//         element = element | color(Color::Red);
-//         break; // 0-Byte
-//       case 2:
-//         element = element | color(Color::Green);
-//         break; // Executable
-//       case 3:
-//         element = element | color(Color::Yellow);
-//         break; // Duplicate
-//       case 4:
-//         element = element | color(Color::Blue);
-//         break; // Directory
-//       default:
-//         element = element | color(Color::White);
-//         break; // Normal
-//       }
-
-//       if (selected) {
-//         element = element | inverted | bold;
-//       }
-
-//       entries.push_back(element);
-//     }
-
-//     return vbox({text(m_right_panel_path) | bold | color(Color::Green),
-//                  separator(),
-//                  vbox(entries) | vscroll_indicator | frame |
-//                      size(HEIGHT, EQUAL, available_height)}) |
-//            border;
-//   });
-// }
 
 ActionID FileManagerUI::getActionIdByIndex(int index) {
   if (index < 0 || index >= static_cast<int>(ActionMap.size())) {
