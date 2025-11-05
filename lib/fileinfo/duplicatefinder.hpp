@@ -1,4 +1,3 @@
-// lib/fileinfo/duplicatefinder.hpp
 #ifndef DUPLICATEFINDER_HPP
 #define DUPLICATEFINDER_HPP
 
@@ -8,24 +7,22 @@
 #include <string>
 
 /**
- * @brief Service class for duplicate file detection
+ * @brief Service for duplicate file detection
  */
 class DuplicateFinder {
 public:
     struct DuplicateGroup {
         std::string hash;
-        std::vector<const FileInfo*> files;
-        long long wastedSpace = 0;  // Total size - 1 file
+        std::vector<FileInfo*> files;
+        long long wastedSpace = 0;  // Total size - 1 file (keep original)
     };
     
     /**
-     * @brief Find and mark duplicate files in the collection
-     * @param files Vector of FileInfo to analyze
+     * @brief Find duplicates and mark them in the vector
+     * @param files Vector of FileInfo to analyze (will be modified!)
      * @return Vector of duplicate groups
      */
-    static std::vector<DuplicateGroup> findDuplicates(
-        std::vector<FileInfo>& files
-    ) {
+    static std::vector<DuplicateGroup> findDuplicates(std::vector<FileInfo>& files) {
         std::unordered_map<std::string, std::vector<FileInfo*>> hashMap;
         
         // Group by hash
@@ -45,7 +42,7 @@ public:
                 group.hash = hash;
                 
                 for (auto* file : fileList) {
-                    file->setDuplicate(true);  // Mark in original
+                    file->setDuplicate(true);  // Mark as duplicate
                     group.files.push_back(file);
                 }
                 
@@ -61,16 +58,34 @@ public:
     }
     
     /**
-     * @brief Calculate total wasted space by duplicates
+     * @brief Calculate total wasted space
      */
-    static long long calculateWastedSpace(
-        const std::vector<DuplicateGroup>& groups
-    ) {
+    static long long calculateWastedSpace(const std::vector<DuplicateGroup>& groups) {
         long long total = 0;
         for (const auto& group : groups) {
             total += group.wastedSpace;
         }
         return total;
+    }
+    
+    /**
+     * @brief Format bytes to human-readable string
+     */
+    static std::string formatBytes(long long bytes) {
+        if (bytes == 0) return "0 B";
+        
+        const char* units[] = {"B", "KB", "MB", "GB", "TB"};
+        int unit = 0;
+        double size = static_cast<double>(bytes);
+        
+        while (size >= 1024.0 && unit < 4) {
+            size /= 1024.0;
+            unit++;
+        }
+        
+        char buf[32];
+        snprintf(buf, sizeof(buf), "%.1f %s", size, units[unit]);
+        return std::string(buf);
     }
 };
 
