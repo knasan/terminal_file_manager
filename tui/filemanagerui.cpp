@@ -1,6 +1,7 @@
 #include "filemanagerui.hpp"
 #include "duplicatefinder.hpp"
 #include "fileprocessoradapter.hpp"
+#include "filesafety.hpp"
 
 FileManagerUI::~FileManagerUI() {
   // FTXUI bug workaround: Terminal cleanup requires output to properly restore
@@ -58,7 +59,7 @@ void FileManagerUI::calculateHashes() {
 
 // Show duplicates
 void FileManagerUI::showDuplicates() {
-  //Backup of all files
+  // Backup of all files
   m_all_files = m_file_infos;
 
   // Find and mark duplicates
@@ -358,6 +359,44 @@ bool FileManagerUI::handleGlobalShortcut(char key_pressed) {
         clearFilter();
         return true;
 
+      case ActionID::DeleteMarkedFiles: { // NEU!
+        if (m_file_infos.empty() || m_selected < 0 ||
+            m_selected >= static_cast<int>(m_file_infos.size())) {
+          m_current_status = "No file selected.";
+          return true;
+        }
+
+        const FileInfo &selected = m_file_infos[m_selected];
+
+        // Show confirmation dialog
+        if (showDeleteConfirmation(selected)) {
+          bool success;
+
+          if (selected.isDirectory()) {
+            // Always recursive for directories
+            success = deleteDirectory(selected, true);
+          } else {
+            success = deleteFile(selected);
+          }
+
+          if (success) {
+            // Refresh directory listing
+            FileProcessorAdapter fp(m_panel_path);
+            m_file_infos = fp.scanDirectory(true);
+            updateMenuStrings(m_file_infos, m_panel_files);
+
+            // Adjust selection
+            if (m_selected >= static_cast<int>(m_file_infos.size())) {
+              m_selected =
+                  std::max(0, static_cast<int>(m_file_infos.size()) - 1);
+            }
+          }
+        } else {
+          m_current_status = "Delete cancelled.";
+        }
+        return true;
+      }
+
       default:
         m_current_status = "Global shortcut: '" + std::string(1, key_pressed) +
                            "' -> " + pair.second.menu_text;
@@ -366,4 +405,119 @@ bool FileManagerUI::handleGlobalShortcut(char key_pressed) {
     }
   }
   return false;
+}
+
+bool FileManagerUI::deleteFile(const FileInfo &file) {
+  try {
+    std::filesystem::remove(file.getPath());
+    m_current_status = "✓ Deleted: " + file.getPath();
+    return true;
+  } catch (const std::filesystem::filesystem_error &e) {
+    m_current_status = "✗ Error deleting file: " + std::string(e.what());
+    return false;
+  }
+}
+
+bool FileManagerUI::deleteDirectory(const FileInfo &dir, bool recursive) {
+  try {
+    if (recursive) {
+      // Count items
+      uintmax_t total = 0;
+      for (const auto &entry :
+           std::filesystem::recursive_directory_iterator(dir.getPath())) {
+        total++;
+      }
+
+      // Update status während Löschung (vereinfacht)
+      m_current_status = "Deleting " + std::to_string(total) + " items...";
+
+      std::filesystem::remove_all(dir.getPath());
+      m_current_status = "✓ Deleted directory (recursive, " +
+                         std::to_string(total) + " items): " + dir.getPath();
+    } else {
+      std::filesystem::remove(dir.getPath());
+      m_current_status = "✓ Deleted empty directory: " + dir.getPath();
+    }
+    return true;
+  } catch (const std::filesystem::filesystem_error &e) {
+    m_current_status = "✗ Error: " + std::string(e.what());
+    return false;
+  }
+}
+
+bool FileManagerUI::showDeleteConfirmation(const FileInfo& file) {
+    // Safety check via FileSafety class
+    auto status = FileSafety::checkDeletion(file.getPath());
+    
+    // Block if not allowed
+    if (status != FileSafety::DeletionStatus::Allowed &&
+        status != FileSafety::DeletionStatus::WarningRemovableMedia) {
+        m_current_status = FileSafety::getStatusMessage(status, file.getPath());
+        return false;
+    }
+    
+    // Show dialog
+    m_dialog_active = true;
+    bool confirmed = false;
+    auto dialog_screen = ScreenInteractive::TerminalOutput();
+    
+    // Extra warning for removable media
+    bool is_removable = (status == FileSafety::DeletionStatus::WarningRemovableMedia);
+    
+    auto dialog_renderer = Renderer([&] {
+        std::string warning = file.isDirectory() ? 
+            "⚠️  DELETE DIRECTORY? (RECURSIVE)" : 
+            "⚠️  DELETE FILE?";
+        
+        std::vector<Element> content = {
+            text(warning) | bold | color(Color::Red) | hcenter,
+            separator(),
+            text("Path: " + file.getPath()) | color(Color::Yellow),
+            text("Size: " + file.getSizeFormatted())
+        };
+        
+        if (is_removable) {
+            content.push_back(separator());
+            content.push_back(
+                text("⚠️  This is on REMOVABLE MEDIA") | 
+                color(Color::Magenta) | bold
+            );
+        }
+        
+        content.push_back(separator());
+        content.push_back(text("") | size(HEIGHT, EQUAL, 1));
+        content.push_back(
+            hbox({
+                text("Press ") | color(Color::GrayLight),
+                text("'y'") | bold | color(Color::Green),
+                text(" to confirm, ") | color(Color::GrayLight),
+                text("'n'") | bold | color(Color::Red),
+                text(" or ") | color(Color::GrayLight),
+                text("ESC") | bold,
+                text(" to cancel") | color(Color::GrayLight)
+            }) | hcenter
+        );
+        
+        return vbox(content) | border | center;
+    });
+    
+    auto dialog_handler = CatchEvent(dialog_renderer, [&](Event event) {
+        if (event == Event::Character('y') || event == Event::Character('Y')) {
+            confirmed = true;
+            dialog_screen.Exit();
+            return true;
+        }
+        if (event == Event::Character('n') || event == Event::Character('N') || 
+            event == Event::Escape) {
+            confirmed = false;
+            dialog_screen.Exit();
+            return true;
+        }
+        return false;
+    });
+    
+    dialog_screen.Loop(dialog_handler);
+    m_dialog_active = false;
+    
+    return confirmed;
 }

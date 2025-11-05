@@ -1,6 +1,7 @@
 # lib/CMakeLists.txt
 add_library(fileinfo_lib STATIC
     fileinfo/filescanner.cpp
+    fileinfo/filesafety.cpp 
 )
 
 target_include_directories(fileinfo_lib PUBLIC

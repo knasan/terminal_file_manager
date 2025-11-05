@@ -58,6 +58,15 @@ private:
   void showDuplicates();
   void clearFilter();
 
+  // Delete functionality
+  bool showDeleteConfirmation(const FileInfo& file);
+  bool deleteFile(const FileInfo& file);
+  bool deleteDirectory(const FileInfo& dir, bool recursive);
+  
+  // Dialog state
+  bool m_dialog_active = false;
+  std::string m_dialog_result = "";
+
 public:
   int m_top_menu_selected = 0;
 
