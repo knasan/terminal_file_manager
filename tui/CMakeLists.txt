@@ -13,7 +13,7 @@ add_executable(tfm
 )
 
 target_link_libraries(tfm PRIVATE 
-    fileinfo_lib        # <-- fileprocessor.cpp
+    tmf-lib
     ftxui::screen
     ftxui::dom
     ftxui::component

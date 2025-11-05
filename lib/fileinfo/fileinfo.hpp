@@ -1,6 +1,8 @@
 #ifndef FILE_INFO_HPP
 #define FILE_INFO_HPP
 
+#include <filesystem>
+
 class FileInfo {
 private:
   std::string m_path;

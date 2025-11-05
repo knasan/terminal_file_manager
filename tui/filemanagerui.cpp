@@ -466,8 +466,8 @@ bool FileManagerUI::showDeleteConfirmation(const FileInfo& file) {
     
     auto dialog_renderer = Renderer([&] {
         std::string warning = file.isDirectory() ? 
-            "⚠️  DELETE DIRECTORY? (RECURSIVE)" : 
-            "⚠️  DELETE FILE?";
+            "DELETE DIRECTORY? (RECURSIVE)" : 
+            "DELETE FILE?";
         
         std::vector<Element> content = {
             text(warning) | bold | color(Color::Red) | hcenter,
