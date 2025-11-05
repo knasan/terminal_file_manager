@@ -22,7 +22,7 @@ void FileManagerUI::setupTopMenu() {
                });
 }
 
-void FileManagerUI::setupLeftPanelEvents() {
+/*void FileManagerUI::setupLeftPanelEvents() {
   m_left_menu = m_left_menu | CatchEvent([&](Event event) {
                   // Beispiel: Enter-Taste
                   if (event == Event::Return && !m_left_file_infos.empty()) {
@@ -51,7 +51,7 @@ void FileManagerUI::setupLeftPanelEvents() {
 
                   return false;
                 });
-}
+}*/
 
 void FileManagerUI::setupFilePanels() {
   // 1. Menüs erstellen

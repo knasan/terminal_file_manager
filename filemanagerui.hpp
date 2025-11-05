@@ -46,8 +46,9 @@ private:
   // UI
   void setupTopMenu();
   void setupFilePanels();
-  void setupLeftPanelEvents();
+  // void setupLeftPanelEvents();
   void initialize();
+  void getMenuEntries();
 
   // Component
   Component createPanel(Component, const std::string &);
@@ -63,7 +64,7 @@ public:
   void setupMainLayout();
   bool handleGlobalShortcut(char);
 
-  void getMenuEntries();
+  
 
   void run();
 };
