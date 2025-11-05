@@ -251,26 +251,16 @@ FileManagerUI::fileInfoToMenuStrings(const std::vector<FileInfo> &infos) {
 
 // Helper methods
 bool FileManagerUI::handleDirectoryChange(const FileInfo &selected_info) {
-  // std::cout << "[DEBUG] Vor Verzeichniswechsel: selected=" << m_left_selected
-  //           << ", old_size=" << m_left_panel_files.size() << "\n";
-
   m_left_panel_path = selected_info.path.string();
   FileProcessor fp(m_left_panel_path);
   m_left_file_infos = fp.scanDirectory();
   m_left_panel_files = fileInfoToMenuStrings(m_left_file_infos);
 
-  // <<< Hier die entscheidende Korrektur: Selected-Index absichern!
   if (m_left_file_infos.empty()) {
     m_left_selected = 0; // Bleibt 0, aber zur Sicherheit
   } else {
-    // Stellen Sie sicher, dass der Index nicht außerhalb des neuen Bereichs
-    // liegt. Da wir in diesem Fall neu laden, setzen wir einfach auf 0.
     m_left_selected = 0;
   }
-
-  // std::cout << "[DEBUG] Nach Verzeichniswechsel: selected=" <<
-  // m_left_selected
-  //            << ", new_size=" << m_left_panel_files.size() << "\n";
 
   m_current_status = "Directory changed: " + m_left_panel_path;
   return true;
