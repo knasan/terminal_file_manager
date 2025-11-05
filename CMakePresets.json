@@ -1,0 +1,49 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "cli-only",
+      "displayName": "CLI Only",
+      "description": "Build only CLI application",
+      "binaryDir": "${sourceDir}/build/cli",
+      "cacheVariables": {
+        "BUILD_TUI": "OFF",
+        "BUILD_GUI": "OFF"
+      }
+    },
+    {
+      "name": "tui-only",
+      "displayName": "TUI Only",
+      "description": "Build only TUI application",
+      "binaryDir": "${sourceDir}/build/tui",
+      "cacheVariables": {
+        "BUILD_TUI": "ON",
+        "BUILD_GUI": "OFF"
+      }
+    },
+    {
+      "name": "all",
+      "displayName": "All Targets",
+      "description": "Build everything",
+      "binaryDir": "${sourceDir}/build/all",
+      "cacheVariables": {
+        "BUILD_TUI": "ON",
+        "BUILD_GUI": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "cli-only",
+      "configurePreset": "cli-only"
+    },
+    {
+      "name": "tui-only",
+      "configurePreset": "tui-only"
+    },
+    {
+      "name": "all",
+      "configurePreset": "all"
+    }
+  ]
+}

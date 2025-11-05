@@ -1,4 +1,5 @@
 #include "filemanagerui.hpp"
+#include "fileprocessoradapter.hpp"
 
 FileManagerUI::~FileManagerUI() {
   // FTXUI bug workaround: Terminal cleanup requires output to properly restore state
@@ -17,7 +18,7 @@ void FileManagerUI::getMenuEntries() {
 }
 
 void FileManagerUI::setupTopMenu() {
-  getMenuEntries();
+  m_menu_entries = ::getMenuEntries(); // from uicontrol.hpp
   m_top_menu =
       Menu(&m_menu_entries, &m_top_menu_selected, MenuOption::Horizontal());
 
@@ -69,16 +70,15 @@ void FileManagerUI::setupFilePanels() {
 }
 
 void FileManagerUI::initialize() {
-  FileProcessor fp(m_current_dir);
-  m_left_file_infos = fp.scanDirectory();
-
-  updateMenuStrings(m_left_file_infos, m_left_panel_files);
-
-  setupTopMenu();
-  setupFilePanels();
-  setupMainLayout();
+    FileProcessorAdapter fp(m_current_dir);
+    m_left_file_infos = fp.scanDirectory(true);  // mit . und ..
+    
+    updateMenuStrings(m_left_file_infos, m_left_panel_files);
+    
+    setupTopMenu();
+    setupFilePanels();
+    setupMainLayout();
 }
-
 void FileManagerUI::setupMainLayout() {
   m_document =
       Container::Vertical({m_top_menu, Renderer([] { return separator(); }),
@@ -138,7 +138,7 @@ void FileManagerUI::updateMenuStrings(const std::vector<FileInfo> &infos,
 
 // Helper methods
 bool FileManagerUI::handleDirectoryChange(const FileInfo &selected_info) {
-  m_left_panel_path = selected_info.path.string();
+  m_left_panel_path = selected_info.getPath();
 
   FileProcessor fp(m_left_panel_path);
   m_left_file_infos = fp.scanDirectory();
@@ -159,7 +159,7 @@ bool FileManagerUI::handleDirectoryChange(const FileInfo &selected_info) {
 }
 
 bool FileManagerUI::handleFileSelection(const FileInfo &selected_info) {
-  if (selected_info.is_directory) {
+  if (selected_info.isDirectory()) {
     return handleDirectoryChange(selected_info);
   } else {
     m_current_status =
