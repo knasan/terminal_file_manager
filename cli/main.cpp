@@ -101,7 +101,7 @@ public:
     FileScanner scanner(fileHash);
 
     std::cout << "Scan directory: " << startPath << std::endl;
-    allFiles = scanner.scanDirectory(startPath, recursiv);
+    allFiles = scanner.scanDirectory(startPath, recursiv, false);
     std::cout << "Scan finished. " << allFiles.size() << " Entries found."
               << std::endl;
 

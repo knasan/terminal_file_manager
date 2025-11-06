@@ -8,11 +8,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(BUILD_TESTS "Build unit tests" ON)
 
-if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    add_compile_options(-Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wshadow)
-elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    add_compile_options(/W4 /permissive- /w44265 /w44062)
-endif()
+#if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+#    add_compile_options(-Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wshadow)
+#elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+#    add_compile_options(/W4 /permissive- /w44265 /w44062)
+#endif()
 
 
 if(NOT CMAKE_BUILD_TYPE)

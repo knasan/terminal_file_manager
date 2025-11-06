@@ -17,4 +17,5 @@ target_link_libraries(tfm PRIVATE
     ftxui::screen
     ftxui::dom
     ftxui::component
+    pthread
 )

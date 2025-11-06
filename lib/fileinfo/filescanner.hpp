@@ -3,6 +3,8 @@
 
 #include <filesystem>
 #include <vector>
+#include <atomic>
+#include <functional>
 
 #include "fileinfo.hpp"
 #include "ihashcalculator.hpp"
@@ -11,12 +13,22 @@ class FileScanner {
 private:
   const IHashCalculator &hashCalculator;
 
+  std::atomic<int> *m_progress_counter = nullptr;
+
 public:
+  void setProgressCounter(std::atomic<int> *counter) {
+    m_progress_counter = counter;
+  }
+
+  using ProgressCallback = std::function<void(int count)>;
+  
   FileScanner(const IHashCalculator &calculator) : hashCalculator(calculator) {}
 
-  std::vector<FileInfo> scanDirectory(const std::string &path,
-                                      bool useRecursively = false,
-                                      bool includeParent = false) const;
+ std::vector<FileInfo> scanDirectory(
+      const std::filesystem::path &dir_path, 
+      bool recursive, 
+      bool include_parent,
+      ProgressCallback progress = nullptr);  // callback
 
 private:
   void processEntry(const std::filesystem::directory_entry &entry,
@@ -42,6 +54,8 @@ private:
 
     results.push_back(info);
   }
+
+  void sortEntries(std::vector<FileInfo> &results, bool include_parent);
 };
 
 #endif // FILESCANNER_HPP

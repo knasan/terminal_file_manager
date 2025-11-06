@@ -6,6 +6,10 @@
 #include <iostream>
 #include <map>
 
+#include <atomic>
+#include <chrono>
+#include <future>
+
 #include "utils.hpp"
 
 using namespace ftxui;
@@ -16,7 +20,7 @@ private:
   int m_selected = 0;
   int m_right_selected = 0;
 
-  bool m_show_full_paths = false; // show file with full path
+  bool m_show_full_paths = false;      // show file with full path
   bool m_show_duplicates_only = false; // show only duplicates
 
   // Paths and files
@@ -36,9 +40,29 @@ private:
   Component createPanelWithTable();
 
   std::string m_current_status = "Ready.";
-  ScreenInteractive m_screen = ScreenInteractive::TerminalOutput();
+  ScreenInteractive m_screen = ScreenInteractive::Fullscreen();
 
   std::vector<std::string> m_menu_entries;
+
+  // Threading
+  std::future<std::vector<FileInfo>> m_load_future; // Worker-Thread
+  std::atomic<bool> m_loading{false}; // Loading status (thread-safe)
+  std::atomic<int> m_loaded_count{0}; // Progress
+  std::string m_loading_message = "";
+
+  // Virtualisierung
+  static constexpr int VISIBLE_ITEMS = 100; // Only 100 items at a time
+  int m_virtual_offset = 0;                 // Offset for virtualized list
+  std::vector<std::string> m_visible_files; // Only visible items
+
+  // Background operations
+  // Async loading
+  void loadDirectoryAsync(const std::filesystem::path &path);
+  void checkLoadingComplete();
+  void updateUIAfterLoad();
+
+  // Virtualisierung
+  void updateVirtualizedView();
 
   // Helper methods
   bool handleFileSelection(const FileInfo &);
@@ -59,13 +83,20 @@ private:
   void clearFilter();
 
   // Delete functionality
-  bool showDeleteConfirmation(const FileInfo& file);
-  bool deleteFile(const FileInfo& file);
-  bool deleteDirectory(const FileInfo& dir, bool recursive);
-  
+  bool showDeleteConfirmation(const FileInfo &file);
+  bool deleteFile(const FileInfo &file);
+  bool deleteDirectory(const FileInfo &dir, bool recursive);
+
   // Dialog state
   bool m_dialog_active = false;
   std::string m_dialog_result = "";
+
+  // NEU: Animation thread
+  std::thread m_animation_thread;
+  std::atomic<bool> m_animating{false};
+  
+  void startAnimation();
+  void stopAnimation();
 
 public:
   int m_top_menu_selected = 0;

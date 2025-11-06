@@ -2,6 +2,7 @@
 add_library(tmf-lib STATIC
     fileinfo/filescanner.cpp
     fileinfo/filesafety.cpp 
+    fileinfo/fileprocessoradapter.cpp
 )
 
 target_include_directories(tmf-lib PUBLIC
