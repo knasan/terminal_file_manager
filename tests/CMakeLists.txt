@@ -15,14 +15,14 @@ FetchContent_MakeAvailable(googletest)
 include(GoogleTest)
 
 # Test executable
-add_executable(fileinfo_tests
+add_executable(tmf-lib_test
     test_filesafety.cpp
     test_fileinfo.cpp
     test_duplicatefinder.cpp
     test_filescanner.cpp
 )
 
-target_link_libraries(fileinfo_tests
+target_link_libraries(tmf-lib_test
     PRIVATE
     tmf-lib
     GTest::gtest_main
@@ -30,4 +30,4 @@ target_link_libraries(fileinfo_tests
 )
 
 # Discover tests
-gtest_discover_tests(fileinfo_tests)
+gtest_discover_tests(tmf-lib_test)
