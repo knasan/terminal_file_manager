@@ -1,1 +1,0 @@
-# terminal_file_manager
