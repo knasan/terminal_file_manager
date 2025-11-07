@@ -1,6 +1,6 @@
 # tfm: The Terminal File Manager for Data Hygiene and Bulk Operations
 
-tfm (Terminal File Manager) is a terminal tool developed in C++ and FXTUI, specializing in cleaning up and efficiently managing large, cluttered file directories.
+tfm (Terminal File Manager) is a terminal tool developed in C++ and FXTUI (https://github.com/ArthurSonzogni/FTXUI), specializing in cleaning up and efficiently managing large, cluttered file directories.
 
 ![Version](https://img.shields.io/badge/version-0.0.1-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
