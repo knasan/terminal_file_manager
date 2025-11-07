@@ -82,7 +82,6 @@ private:
                          std::vector<std::string> &t);
 
   // Helper methods
-  void calculateHashes();
   void showDuplicates();
   void clearFilter();
 

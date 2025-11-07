@@ -18,31 +18,13 @@ FileManagerUI::~FileManagerUI() {
             << std::endl;
 }
 
-// Hash calculation for the current directory
-void FileManagerUI::calculateHashes() {
-  FNV1A hasher;
-  int count = 0;
-
-  for (auto &info : m_file_infos) {
-    if (!info.isDirectory() && info.getFileSize() > 0 &&
-        info.getHash().empty()) {
-      std::string hash = hasher.calculateHash(info.getPath());
-      info.setHash(hash);
-      count++;
-    }
-  }
-
-  m_current_status = "Calculated " + std::to_string(count) + " hashes";
-}
-
 // Show duplicates
 void FileManagerUI::showDuplicates() {
   m_all_files = m_file_infos;
   auto groups = DuplicateFinder::findDuplicates(m_file_infos);
 
   if (groups.empty()) {
-    m_current_status =
-        "No duplicates found. Press 'h' to calculate hashes first.";
+    m_current_status = "No duplicates found.";
     return;
   }
 
@@ -124,7 +106,6 @@ void FileManagerUI::loadDirectoryAsync(const std::filesystem::path &path) {
 
         stopAnimation();
       });
-
 
       return files;
 
@@ -412,7 +393,7 @@ void FileManagerUI::getMenuEntries() {
   m_menu_entries.clear();
   m_menu_entries.reserve(ActionMap.size()); // Pre-allocate
   for (const auto &pair : ActionMap) {
-    m_menu_entries.push_back(pair.second.menu_text);
+    m_menu_entries.push_back(pair.second.m_menu_title);
   }
 }
 
@@ -427,9 +408,9 @@ void FileManagerUI::setupTopMenu() {
                    if (action_id == ActionID::Quit) {
                      m_screen.Exit();
                    } else {
-                     m_current_status =
-                         "Menu action: " + ActionMap.at(action_id).menu_text +
-                         " executed.";
+                     m_current_status = "Menu action: " +
+                                        ActionMap.at(action_id).m_menu_title +
+                                        " executed.";
                    }
                    return true;
                  }
@@ -474,14 +455,11 @@ ActionID FileManagerUI::getActionIdByIndex(int index) {
 
 bool FileManagerUI::handleGlobalShortcut(char key_pressed) {
   for (const auto &pair : ActionMap) {
-    if (key_pressed == pair.second.shortcut) {
+    if (key_pressed == pair.second.m_shortcut) {
       switch (pair.first) {
+
       case ActionID::Quit:
         m_screen.Exit();
-        return true;
-
-      case ActionID::CalculateHashes:
-        calculateHashes();
         return true;
 
       case ActionID::FindDuplicates:
@@ -526,7 +504,7 @@ bool FileManagerUI::handleGlobalShortcut(char key_pressed) {
 
       default:
         m_current_status = "Global shortcut: '" + std::string(1, key_pressed) +
-                           "' -> " + pair.second.menu_text;
+                           "' -> " + pair.second.m_menu_title;
         return true;
       }
     }
@@ -649,7 +627,7 @@ void FileManagerUI::startAnimation() {
   m_animating = true;
   m_animation_thread = std::thread([this]() {
     while (m_animating) {
-      // std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
       if (m_animating) {
         m_screen.RequestAnimationFrame(); // Force UI refresh
       }
