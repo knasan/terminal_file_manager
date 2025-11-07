@@ -5,6 +5,7 @@ tfm (Terminal File Manager) is a terminal tool developed in C++ and FXTUI (https
 ![Version](https://img.shields.io/badge/version-0.0.1-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
+![Doxygen Deployment Status](https://github.com/knasan/terminal_file_manager/actions/workflows/doxygen-pages.yml/badge.svg)
 
 ![Terminal File Manager](images/tfm-work-small.gif)
 
