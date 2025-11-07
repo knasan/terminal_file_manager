@@ -1,5 +1,5 @@
-#ifndef DUPLICATEFINDER_HPP
-#define DUPLICATEFINDER_HPP
+#ifndef NULLBYTESFINDER_HPP
+#define NULLBYTESFINDER_HPP
 
 #include "fileinfo.hpp"
 #include <vector>
@@ -7,42 +7,42 @@
 #include <string>
 
 /**
- * @brief Service for duplicate file detection
+ * @brief Service for 0 bytes file detection
  */
-class DuplicateFinder {
+class NullBytesFinder {
 public:
-    struct DuplicateGroup {
+    struct NullBytesGroup {
         std::string hash;
         std::vector<FileInfo*> files;
         long long wastedSpace = 0;  // Total size - 1 file (keep original)
     };
     
     /**
-     * @brief Find duplicates and mark them in the vector
+     * @brief Find 0 bytes and mark them in the vector
      * @param files Vector of FileInfo to analyze (will be modified!)
-     * @return Vector of duplicate groups
+     * @return Vector of 0 bytes groups
      */
-    static std::vector<DuplicateGroup> findDuplicates(std::vector<FileInfo>& files) {
+    static std::vector<NullBytesGroup> findDuplicates(std::vector<FileInfo>& files) {
         std::unordered_map<std::string, std::vector<FileInfo*>> hashMap;
         
         // Group by hash
         for (auto& info : files) {
             if (!info.isDirectory() && 
-                info.getFileSize() > 0 && 
+                info.getFileSize() == 0 && 
                 !info.getHash().empty()) {
                 hashMap[info.getHash()].push_back(&info);
             }
         }
         
-        // Extract duplicates and mark them
-        std::vector<DuplicateGroup> groups;
+        // Extract 0 bytes and mark them
+        std::vector<NullBytesGroup> groups;
         for (auto& [hash, fileList] : hashMap) {
             if (fileList.size() > 1) {
-                DuplicateGroup group;
+                NullBytesGroup group;
                 group.hash = hash;
                 
                 for (auto* file : fileList) {
-                    file->setDuplicate(true);  // Mark as duplicate
+                    file->setBroken(true);  // Mark as 0 byte
                     group.files.push_back(file);
                 }
                 
@@ -56,17 +56,6 @@ public:
         
         return groups;
     }
-    
-    /**
-     * @brief Calculate total wasted space
-     */
-    static long long calculateWastedSpace(const std::vector<DuplicateGroup>& groups) {
-        long long total = 0;
-        for (const auto& group : groups) {
-            total += group.wastedSpace;
-        }
-        return total;
-    }
 };
 
-#endif // DUPLICATEFINDER_HPP
+#endif // NULLBYTESFINDER_HPP

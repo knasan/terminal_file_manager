@@ -28,13 +28,6 @@ public:
       bool recursive = false,  // default false!
       ProgressCallback progress = nullptr);
 
-  void calculateHashes(std::vector<FileInfo> &) {
-    // Already done by FileScanner!
-    // This is a no-op for compatibility
-  }
-
-
-
   std::vector<DuplicateFinder::DuplicateGroup>
   findDuplicates(std::vector<FileInfo> &files) {
     return DuplicateFinder::findDuplicates(files);

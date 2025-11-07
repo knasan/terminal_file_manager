@@ -20,23 +20,25 @@ private:
   int m_selected = 0;
   int m_right_selected = 0;
 
-  bool m_show_full_paths = false;      // show file with full path
-  bool m_show_duplicates_only = false; // show only duplicates
+  bool m_show_full_paths = false; // show file with full path
+  
+  // Single State Variable instead bool m_show_duplicates_only
+  enum class FilterState { None, DuplicatesOnly, ZeroBytesOnly };
+  FilterState m_current_filter_state = FilterState::None;
 
   // Paths and files
   std::string m_current_dir;
   std::string m_panel_path;
   std::vector<FileInfo> m_file_infos;
   std::vector<std::string> m_panel_files;
-  std::vector<FileInfo> m_all_files;       // backup all files
-  std::vector<FileInfo> m_duplicate_files; // Only duplicates
+  std::vector<FileInfo> m_all_files;   // backup all files
+  std::vector<FileInfo> m_store_files; // store
 
   // UI Components
   Component m_top_menu;
   Component m_menu;
   Component m_main_view;
   Component m_document;
-  Component createPanel();
   Component createPanelWithTable();
 
   std::string m_current_status = "Ready.";
@@ -51,14 +53,14 @@ private:
   std::string m_loading_message = "";
 
   // Virtualisierung
-  static constexpr int VISIBLE_ITEMS = 100; // Only 100 items at a time
+  static constexpr int VISIBLE_ITEMS = 100; // Only 1000 items at a time
   int m_virtual_offset = 0;                 // Offset for virtualized list
   std::vector<std::string> m_visible_files; // Only visible items
 
   // Background operations
   // Async loading
   void loadDirectoryAsync(const std::filesystem::path &path);
-  void checkLoadingComplete();
+
   void updateUIAfterLoad();
 
   // Virtualisierung
@@ -78,8 +80,8 @@ private:
                          std::vector<std::string> &t);
 
   // Helper methods
-  void calculateHashes();
   void showDuplicates();
+  void showZeroByteFiles();
   void clearFilter();
 
   // Delete functionality
@@ -89,12 +91,11 @@ private:
 
   // Dialog state
   bool m_dialog_active = false;
-  std::string m_dialog_result = "";
 
-  // NEU: Animation thread
+  // Animation thread
   std::thread m_animation_thread;
   std::atomic<bool> m_animating{false};
-  
+
   void startAnimation();
   void stopAnimation();
 

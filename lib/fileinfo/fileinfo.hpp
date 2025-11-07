@@ -11,6 +11,7 @@ private:
   bool m_isDir;
   bool m_isDuplicate = false;
   bool m_isParent = false;
+  bool m_broken = false;
 
   bool isExecutable() const {
     if (m_isDir)
