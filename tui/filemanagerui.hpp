@@ -50,10 +50,6 @@ private:
   std::atomic<int> m_loaded_count{0}; // Progress
   std::string m_loading_message = "";
 
-  std::atomic<bool> m_scan_complete{false};
-  std::vector<FileInfo> m_scan_result;
-  std::mutex m_scan_mutex;
-
   // Virtualisierung
   static constexpr int VISIBLE_ITEMS = 1000; // Only 1000 items at a time
   int m_virtual_offset = 0;                  // Offset for virtualized list
@@ -92,7 +88,6 @@ private:
 
   // Dialog state
   bool m_dialog_active = false;
-  std::string m_dialog_result = "";
 
   // Animation thread
   std::thread m_animation_thread;

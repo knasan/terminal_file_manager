@@ -87,7 +87,6 @@ public:
 
   bool isDuplicate() const { return m_isDuplicate; }
   void setDuplicate(bool dup) { m_isDuplicate = dup; }
-  void setBroken(bool broken) { m_broken = broken; }
 
   void setHash(const std::string &hash) { m_hash = hash; }
 
