@@ -20,6 +20,20 @@ FileManagerUI::~FileManagerUI() {
 
 // Show duplicates
 void FileManagerUI::showDuplicates() {
+  // 1. Switching logic: Deactivate if already active.
+  if (m_current_filter_state == FilterState::DuplicatesOnly) {
+    clearFilter();
+    return;
+  }
+
+  // 2. State preservation: If ANOTHER filter is active, delete it first,
+  //    so that m_file_infos is reset to its original state.
+  if (m_current_filter_state != FilterState::None) {
+    clearFilter();
+  }
+
+  // 3. Filter preparation (backup of the original state, since clearFilter()
+  // deleted m_all_files)
   m_all_files = m_file_infos;
   auto groups = DuplicateFinder::findDuplicates(m_file_infos);
 
@@ -28,46 +42,87 @@ void FileManagerUI::showDuplicates() {
     return;
   }
 
-  m_duplicate_files.clear();
+  m_store_files.clear();
   for (const auto &info : m_file_infos) {
     if (info.isDuplicate()) {
-      m_duplicate_files.push_back(info);
+      m_store_files.push_back(info);
     }
   }
 
-  m_file_infos = m_duplicate_files;
+  m_file_infos = m_store_files;
   m_show_full_paths = true;
+  m_current_filter_state = FilterState::DuplicatesOnly;
 
   updateMenuStrings(m_file_infos, m_panel_files);
   updateVirtualizedView();
   m_selected = 0;
-  m_show_duplicates_only = true;
 
   long long wasted = DuplicateFinder::calculateWastedSpace(groups);
-  m_current_status = "Showing " + std::to_string(m_duplicate_files.size()) +
+  m_current_status = "Showing " + std::to_string(m_store_files.size()) +
                      " duplicates (" + formatBytes(wasted) +
                      " wasted). Press 'c' to clear filter.";
 }
 
+void FileManagerUI::showZeroByteFiles() {
+  // 1. Switching logic: Deactivate if already active.
+  if (m_current_filter_state == FilterState::DuplicatesOnly) {
+    clearFilter();
+    return;
+  }
+
+  // 2. State preservation: If ANOTHER filter is active, delete it first,
+  //    so that m_file_infos is reset to its original state.
+  if (m_current_filter_state != FilterState::None) {
+    clearFilter();
+  }
+
+  m_all_files = m_file_infos; // Saving the current file list (backup)
+
+  for (const auto &info : m_file_infos) {
+    if (info.getFileSize() == 0 && !info.isDirectory() && !info.isParentDir()) {
+      m_store_files.push_back(info);
+    }
+  }
+
+  if (m_store_files.empty()) {
+    m_current_status = "No 0-byte files found.";
+    m_all_files.clear(); // Delete the backup because no filter was applied.
+    clearFilter();       // ensures that the status is consistent.
+    return;
+  }
+
+  m_file_infos = m_store_files;
+  m_show_full_paths = true;
+  m_current_filter_state = FilterState::ZeroBytesOnly;
+
+  updateMenuStrings(m_file_infos, m_panel_files);
+  updateVirtualizedView();
+  m_selected = 0;
+  m_current_status = "Filter: " + std::to_string(m_file_infos.size()) + " Zero file(s) found.";
+  m_screen.RequestAnimationFrame();
+}
+
 // Reset filter
 void FileManagerUI::clearFilter() {
-  if (!m_show_duplicates_only) {
-    m_current_status = "No filter active.";
+  if (m_all_files.empty()) {
+    m_current_filter_state = FilterState::None;
     return;
   }
 
   // Restore original files
   m_file_infos = m_all_files;
+  m_all_files.clear();
 
-  // IMPORTANT: back to displayName!
+  // IMPORTANT: back
+  m_current_filter_state = FilterState::None;
   m_show_full_paths = false;
 
   updateMenuStrings(m_file_infos, m_panel_files);
-  m_selected = 0;
-  m_show_duplicates_only = false;
   updateVirtualizedView();
-
-  m_current_status = "Filter cleared. Showing all files.";
+  m_selected = 0;
+  m_current_status = "Filter cleared. Showing " +
+                     std::to_string(m_file_infos.size()) + " entries.";
+  m_screen.RequestAnimationFrame();
 }
 
 // ============================================================================
@@ -130,7 +185,7 @@ void FileManagerUI::updateUIAfterLoad() {
 }
 
 // ============================================================================
-// VIRTUALISIERUNG
+// VIRTUALIZATION
 // ============================================================================
 
 void FileManagerUI::updateVirtualizedView() {
@@ -339,7 +394,7 @@ void FileManagerUI::run() {
 }
 
 // ============================================================================
-// REST (unchanged)
+// REST
 // ============================================================================
 
 void FileManagerUI::getMenuEntries() {
@@ -421,6 +476,10 @@ bool FileManagerUI::handleGlobalShortcut(char key_pressed) {
 
       case ActionID::ClearFilter:
         clearFilter();
+        return true;
+
+      case ActionID::FindZeroBytes:
+        showZeroByteFiles();
         return true;
 
       // ========================================
