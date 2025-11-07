@@ -29,7 +29,7 @@ jobs:
       - name: Install Doxygen
         run: |
           sudo apt-get update
-          udo apt-get install -y doxygen graphviz
+          sudo apt-get install -y doxygen graphviz
 
       # Runs a set of commands using the runners shell
       - name: Run Doxygen
