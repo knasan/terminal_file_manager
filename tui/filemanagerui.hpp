@@ -36,7 +36,6 @@ private:
   Component m_menu;
   Component m_main_view;
   Component m_document;
-  Component createPanel();
   Component createPanelWithTable();
 
   std::string m_current_status = "Ready.";
@@ -51,7 +50,7 @@ private:
   std::string m_loading_message = "";
 
   // Virtualisierung
-  static constexpr int VISIBLE_ITEMS = 1000; // Only 1000 items at a time
+  static constexpr int VISIBLE_ITEMS = 100; // Only 1000 items at a time
   int m_virtual_offset = 0;                  // Offset for virtualized list
   std::vector<std::string> m_visible_files;  // Only visible items
 

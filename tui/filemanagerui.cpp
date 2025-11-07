@@ -162,53 +162,6 @@ void FileManagerUI::updateVirtualizedView() {
   }
 }
 
-Component FileManagerUI::createPanel() {
-  return Renderer(m_menu, [this] {
-    int terminal_height = Terminal::Size().dimy;
-    int available_height = terminal_height - 6;
-
-    // Custom Rendering with colors
-    std::vector<Element> entries;
-    for (size_t i = 0; i < m_file_infos.size(); ++i) {
-      const auto &file_info = m_file_infos[i];
-      bool selected = (i == static_cast<size_t>(m_selected));
-
-      auto element = text(file_info.getPath());
-
-      // use color
-      switch (file_info.getColorCode()) {
-      case 1:
-        element = element | color(Color::Red);
-        break; // 0-Byte
-      case 2:
-        element = element | color(Color::Green);
-        break; // Executable
-      case 3:
-        element = element | color(Color::Yellow);
-        break; // Duplicate
-      case 4:
-        element = element | color(Color::Blue);
-        break; // Directory
-      default:
-        element = element | color(Color::White);
-        break; // Normal
-      }
-
-      if (selected) {
-        element = element | inverted | bold;
-      }
-
-      entries.push_back(element);
-    }
-
-    return vbox({text(m_panel_path) | bold | color(Color::Green),
-                 // separator(),
-                 vbox(entries) | vscroll_indicator | frame |
-                     size(HEIGHT, EQUAL, available_height)}) |
-           border;
-  });
-}
-
 // ============================================================================
 // UI SETUP
 // ============================================================================
