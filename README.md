@@ -2,7 +2,11 @@
 
 tfm (Terminal File Manager) is a terminal tool developed in C++ and FXTUI, specializing in cleaning up and efficiently managing large, cluttered file directories.
 
-![tfm work](images/tfm-work.gif)
+![Version](https://img.shields.io/badge/version-0.0.1-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+
+
+![Terminal File Manager](images/tfm-work-small.gif)
 
 ⚠️ **IMPORTANT SECURITY NOTICE** ⚠️
 
@@ -69,5 +73,5 @@ This project is released under the MIT License. See LICENSE file in this repo!
 
 We welcome all contributions! Please check out the open issues or submit pull requests to improve tfm.
 
-# TIP: when DEBUG Enabled
+# TIP
 tmf 2>&1 | tee debug.log
