@@ -66,3 +66,6 @@ cp ./build/tui/tfm to /usr/local/bin/
 This project is released under the MIT License. See LICENSE file in this repo!
 
 We welcome all contributions! Please check out the open issues or submit pull requests to improve tfm.
+
+# TIP: when DEBUG Enabled
+tmf 2>&1 | tee debug.log

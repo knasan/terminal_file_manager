@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include "duplicatefinder.hpp"
 #include "fileinfo.hpp"
+#include "utils.hpp"
 
 class DuplicateFinderTest : public ::testing::Test {
 protected:
@@ -94,10 +95,10 @@ TEST_F(DuplicateFinderTest, IgnoresEmptyHashes) {
 }
 
 TEST_F(DuplicateFinderTest, FormatsBytesCorrectly) {
-    EXPECT_EQ(DuplicateFinder::formatBytes(0), "0 B");
-    EXPECT_EQ(DuplicateFinder::formatBytes(500), "500.0 B");
-    EXPECT_EQ(DuplicateFinder::formatBytes(1024), "1.0 KB");
-    EXPECT_EQ(DuplicateFinder::formatBytes(1536), "1.5 KB");
-    EXPECT_EQ(DuplicateFinder::formatBytes(1048576), "1.0 MB");
-    EXPECT_EQ(DuplicateFinder::formatBytes(1073741824), "1.0 GB");
+    EXPECT_EQ(formatBytes(0), "0 B");
+    EXPECT_EQ(formatBytes(500), "500.0 B");
+    EXPECT_EQ(formatBytes(1024), "1.0 KB");
+    EXPECT_EQ(formatBytes(1536), "1.5 KB");
+    EXPECT_EQ(formatBytes(1048576), "1.0 MB");
+    EXPECT_EQ(formatBytes(1073741824), "1.0 GB");
 }

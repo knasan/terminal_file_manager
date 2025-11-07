@@ -22,6 +22,10 @@ add_executable(tmf-lib_test
     test_filescanner.cpp
 )
 
+target_include_directories(tmf-lib_test
+    PUBLIC ${CMAKE_SOURCE_DIR}/utils
+)
+
 target_link_libraries(tmf-lib_test
     PRIVATE
     tmf-lib

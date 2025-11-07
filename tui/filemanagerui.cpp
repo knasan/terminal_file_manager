@@ -5,6 +5,7 @@
 
 FileManagerUI::~FileManagerUI() {
   stopAnimation();
+
   // Wait for background task to complete
   if (m_load_future.valid()) {
     m_load_future.wait();
@@ -56,13 +57,13 @@ void FileManagerUI::showDuplicates() {
   m_show_full_paths = true;
 
   updateMenuStrings(m_file_infos, m_panel_files);
-  updateVirtualizedView(); // NEU: Virtualisierung aktualisieren!
+  updateVirtualizedView();
   m_selected = 0;
   m_show_duplicates_only = true;
 
   long long wasted = DuplicateFinder::calculateWastedSpace(groups);
   m_current_status = "Showing " + std::to_string(m_duplicate_files.size()) +
-                     " duplicates (" + DuplicateFinder::formatBytes(wasted) +
+                     " duplicates (" + formatBytes(wasted) +
                      " wasted). Press 'c' to clear filter.";
 }
 
@@ -82,6 +83,7 @@ void FileManagerUI::clearFilter() {
   updateMenuStrings(m_file_infos, m_panel_files);
   m_selected = 0;
   m_show_duplicates_only = false;
+  updateVirtualizedView();
 
   m_current_status = "Filter cleared. Showing all files.";
 }
@@ -98,59 +100,46 @@ void FileManagerUI::loadDirectoryAsync(const std::filesystem::path &path) {
   m_loading = true;
   m_loaded_count = 0;
   m_loading_message = "Scanning directory...";
-  
+
   m_file_infos.clear();
   m_panel_files.clear();
   m_visible_files.clear();
-  
+
   startAnimation();
 
   m_load_future = std::async(std::launch::async, [this, path]() {
     try {
       FileProcessorAdapter fp(path);
-      
-      auto progress_callback = [this](int count) {
-        m_loaded_count = count;
-      };
-      
-      // NEU: recursive = false (nur aktuelles Verzeichnis!)
+
+      auto progress_callback = [this](int count) { m_loaded_count = count; };
+
+      // FIXIT include_parent_dir, recursive, ?
       auto files = fp.scanDirectory(true, false, progress_callback);
-      //                                  ^^^^^
-      //                                  include_parent, recursive
-      
+
       m_screen.Post([this, files = std::move(files)]() mutable {
         m_file_infos = std::move(files);
+
         updateUIAfterLoad();
         m_loading = false;
+
         stopAnimation();
       });
-      
+
+
       return files;
+
     } catch (const std::exception &e) {
       m_screen.Post([this]() {
         m_current_status = "Error loading directory";
         m_loading = false;
         stopAnimation();
       });
+
       return std::vector<FileInfo>();
     }
   });
 }
 
-void FileManagerUI::checkLoadingComplete() {
-  if (m_loading && m_load_future.valid()) {
-    auto status = m_load_future.wait_for(std::chrono::milliseconds(0));
-
-    if (status == std::future_status::ready) {
-      m_file_infos = m_load_future.get();
-      updateUIAfterLoad();
-      m_loading = false;
-      
-      // Force screen refresh
-      m_screen.Post(Event::Custom);  // Triggers a redraw
-    }
-  }
-}
 void FileManagerUI::updateUIAfterLoad() {
   updateMenuStrings(m_file_infos, m_panel_files);
   updateVirtualizedView();
@@ -257,11 +246,9 @@ void FileManagerUI::setupFilePanels() {
   menu_option.entries_option.transform = [this](EntryState state) {
     const FileInfo *info = nullptr;
 
-    // Find FileInfo via Label (zuverlässig!)
     for (const auto &file_info : m_file_infos) {
-      std::string label_to_compare = m_show_full_paths 
-          ? file_info.getPath() 
-          : file_info.getDisplayName();
+      std::string label_to_compare =
+          m_show_full_paths ? file_info.getPath() : file_info.getDisplayName();
 
       if (label_to_compare == state.label) {
         info = &file_info;
@@ -274,43 +261,55 @@ void FileManagerUI::setupFilePanels() {
 
     if (info) {
       switch (info->getColorCode()) {
-      case 1: name_element = name_element | color(Color::Red); break;
-      case 2: name_element = name_element | color(Color::Green); break;
-      case 3: name_element = name_element | color(Color::Yellow); break;
-      case 4: name_element = name_element | color(Color::Blue); break;
-      default: break;
+      case 1:
+        name_element = name_element | color(Color::Red);
+        break;
+      case 2:
+        name_element = name_element | color(Color::Green);
+        break;
+      case 3:
+        name_element = name_element | color(Color::Yellow);
+        break;
+      case 4:
+        name_element = name_element | color(Color::Blue);
+        break;
+      default:
+        break;
       }
+
       size_element = text(info->getSizeFormatted()) | color(Color::GrayLight);
     }
 
-    auto row = hbox({
-        name_element | size(WIDTH, EQUAL, 60), 
-        filler(), 
-        size_element | align_right
-    });
-    
+    auto row = hbox({name_element | size(WIDTH, EQUAL, 60), filler(),
+                     size_element | align_right});
+
     if (state.focused) {
       row = row | inverted | bold;
     }
+
     return row;
   };
 
-  // WICHTIG: Use m_visible_files!
+  // Use m_visible_files!
   m_menu = Menu(&m_visible_files, &m_selected, menu_option);
 
   m_menu = m_menu | CatchEvent([this](Event event) {
-    // Don't need checkLoadingComplete() anymore with Post()
-    
-    if (event == Event::Return && !m_file_infos.empty()) {
-      if (auto *selected_info = safe_at(m_file_infos, m_selected)) {
-        return handleFileSelection(*selected_info);
-      }
-    } else if (event.is_character()) {
-      return handleGlobalShortcut(event.character()[0]);
-    }
-    
-    return false;
-  });
+             bool needs_update = false;
+
+             if (event == Event::Return && !m_file_infos.empty()) {
+               if (auto *selected_info = safe_at(m_file_infos, m_selected)) {
+                 needs_update = handleFileSelection(*selected_info);
+               }
+             } else if (event.is_character()) {
+               needs_update = (event.character()[0]);
+             }
+
+             if (needs_update) {
+               updateVirtualizedView();
+             }
+
+             return false;
+           });
 
   m_main_view = createPanelWithTable();
 }
@@ -396,8 +395,6 @@ bool FileManagerUI::handleFileSelection(const FileInfo &selected_info) {
 
 void FileManagerUI::run() {
   auto global_handler = CatchEvent(m_document, [this](Event event) {
-    // checkLoadingComplete() nicht mehr nötig mit m_screen.Post()
-    
     if (event.is_character()) {
       return handleGlobalShortcut(event.character()[0]);
     }
@@ -496,9 +493,9 @@ bool FileManagerUI::handleGlobalShortcut(char key_pressed) {
         return true;
 
       // ========================================
-      // HIER IST DIE DELETE-FUNKTION
+      // DELETE FUNCTION
       // ========================================
-      case ActionID::DeleteMarkedFiles: {  // ← Hier beginnt der Case
+      case ActionID::DeleteMarkedFiles: { // ← This is where the case begins
         if (m_file_infos.empty() || m_selected < 0 ||
             m_selected >= static_cast<int>(m_file_infos.size())) {
           m_current_status = "No file selected.";
@@ -517,14 +514,15 @@ bool FileManagerUI::handleGlobalShortcut(char key_pressed) {
           }
 
           if (success) {
-            // Async refresh (statt blocking!)
+            // Async refresh (instead of blocking!)
             loadDirectoryAsync(m_panel_path);
           }
+
         } else {
           m_current_status = "Delete cancelled.";
         }
         return true;
-      }  // ← Hier endet der Case
+      } // ← This is where the case ends.
 
       default:
         m_current_status = "Global shortcut: '" + std::string(1, key_pressed) +
@@ -535,39 +533,6 @@ bool FileManagerUI::handleGlobalShortcut(char key_pressed) {
   }
   return false;
 }
-/*
-bool FileManagerUI::deleteRefresh() {
-
-case ActionID::DeleteMarkedFiles: {
-  if (m_file_infos.empty() || m_selected < 0 ||
-      m_selected >= static_cast<int>(m_file_infos.size())) {
-    m_current_status = "No file selected.";
-    return true;
-  }
-
-  const FileInfo &selected = m_file_infos[m_selected];
-
-  if (showDeleteConfirmation(selected)) {
-    bool success;
-
-    if (selected.isDirectory()) {
-      success = deleteDirectory(selected, true);
-    } else {
-      success = deleteFile(selected);
-    }
-
-    if (success) {
-      // NEU: Async refresh statt blocking!
-      loadDirectoryAsync(m_panel_path);
-    }
-  } else {
-    m_current_status = "Delete cancelled.";
-  }
-  return true;
-}
-  return true;
-}
-  */
 
 bool FileManagerUI::deleteFile(const FileInfo &file) {
   try {
@@ -590,7 +555,7 @@ bool FileManagerUI::deleteDirectory(const FileInfo &dir, bool recursive) {
         total++;
       }
 
-      // Update status während Löschung (vereinfacht)
+      // Update status during deletion (simplified)
       m_current_status = "Deleting " + std::to_string(total) + " items...";
 
       std::filesystem::remove_all(dir.getPath());
@@ -638,7 +603,7 @@ bool FileManagerUI::showDeleteConfirmation(const FileInfo &file) {
 
     if (is_removable) {
       content.push_back(separator());
-      content.push_back(text("⚠️  This is on REMOVABLE MEDIA") |
+      content.push_back(text("This is on REMOVABLE MEDIA") |
                         color(Color::Magenta) | bold);
     }
 
@@ -678,14 +643,15 @@ bool FileManagerUI::showDeleteConfirmation(const FileInfo &file) {
 }
 
 void FileManagerUI::startAnimation() {
-  if (m_animating) return;
-  
+  if (m_animating)
+    return;
+
   m_animating = true;
   m_animation_thread = std::thread([this]() {
     while (m_animating) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      // std::this_thread::sleep_for(std::chrono::milliseconds(1));
       if (m_animating) {
-        m_screen.Post(Event::Custom);  // Force UI refresh
+        m_screen.RequestAnimationFrame(); // Force UI refresh
       }
     }
   });
@@ -696,4 +662,5 @@ void FileManagerUI::stopAnimation() {
   if (m_animation_thread.joinable()) {
     m_animation_thread.join();
   }
+  m_screen.RequestAnimationFrame();
 }

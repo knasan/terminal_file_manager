@@ -96,12 +96,12 @@ private:
   std::vector<FileInfo> allFiles;
 
 public:
-  void run(const std::string &startPath, bool recursiv) {
+  void run(const std::string &startPath, bool recursiv, bool include_parent) {
     FNV1A fileHash;
     FileScanner scanner(fileHash);
 
     std::cout << "Scan directory: " << startPath << std::endl;
-    allFiles = scanner.scanDirectory(startPath, recursiv, false);
+    allFiles = scanner.scanDirectory(startPath, recursiv, include_parent);
     std::cout << "Scan finished. " << allFiles.size() << " Entries found."
               << std::endl;
 
@@ -117,7 +117,7 @@ private:
 
     for (const auto &info : allFiles) {
       if (info.zeroFiles()) {
-        std::cout << "⚠️ Possibly defective (0 Bytes): " << info.getPath()
+        std::cout << "Possibly defective (0 Bytes): " << info.getPath()
                   << std::endl;
         corruptFileCounter++;
       }
@@ -178,6 +178,7 @@ int main(int argc, char *argv[]) {
   std::string current_dir = std::filesystem::current_path();
 
   bool isRecursive = false;
+  bool includeParent = false;
   std::string startPath;
 
   // Einfacher Argument-Parser
@@ -202,7 +203,7 @@ int main(int argc, char *argv[]) {
     startPath = current_dir;
   }
 
-  app.run(startPath, isRecursive);
+  app.run(startPath, isRecursive, includeParent);
 
   return 0;
 }

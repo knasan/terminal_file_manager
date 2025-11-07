@@ -47,15 +47,15 @@ std::string FileSafety::getStatusMessage(DeletionStatus status, const std::strin
         case DeletionStatus::Allowed:
             return "Deletion allowed";
         case DeletionStatus::BlockedSystemPath:
-            return "✗ Cannot delete system directory: " + path;
+            return "Cannot delete system directory: " + path;
         case DeletionStatus::BlockedHome:
-            return "✗ Cannot delete your home directory: " + path;
+            return "Cannot delete your home directory: " + path;
         case DeletionStatus::BlockedMountPoint:
-            return "✗ Cannot delete mount point: " + path;
+            return "Cannot delete mount point: " + path;
         case DeletionStatus::BlockedVirtualFS:
-            return "✗ Cannot delete virtual/system filesystem: " + path;
+            return "Cannot delete virtual/system filesystem: " + path;
         case DeletionStatus::WarningRemovableMedia:
-            return "⚠️  This is on removable media: " + path;
+            return "This is on removable media: " + path;
         default:
             return "Unknown status";
     }

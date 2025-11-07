@@ -2,16 +2,20 @@
 #include <algorithm>
 #include <iostream>
 
+// dir_path = /home/users/foobar
+// recursive = true or false
+// include_parent_dir = with "." and ".."
+
 std::vector<FileInfo>
 FileScanner::scanDirectory(const std::filesystem::path &dir_path,
-                           bool recursive, bool include_parent,
+                           bool recursive, bool include_parent_dir,
                            ProgressCallback progress) {
 
   std::vector<FileInfo> results;
   int count = 0;
 
   // Add parent directory if requested (non-recursive only)
-  if (include_parent && !recursive) {
+  if (include_parent_dir && !recursive) {
     auto parent_path = dir_path.parent_path();
     results.emplace_back(parent_path.string(), 0, true, true);
   }
@@ -25,7 +29,7 @@ FileScanner::scanDirectory(const std::filesystem::path &dir_path,
         // Call progress callback
         if (progress && ++count % 100 == 0) { // Update every 100 items
           progress(count);
-        }
+        }        
       }
     } else {
       for (const auto &entry : std::filesystem::directory_iterator(dir_path)) {
@@ -46,17 +50,17 @@ FileScanner::scanDirectory(const std::filesystem::path &dir_path,
     // Error handling
   } // Sorting order: ".." first, then folders, then files (alphabetical)
 
-  sortEntries(results, include_parent);
+  sortEntries(results, include_parent_dir);
 
   return results;
 }
 
 void FileScanner::sortEntries(std::vector<FileInfo> &results,
-                              bool include_parent) {
+                              bool include_parent_dir) {
   std::sort(results.begin(), results.end(),
-            [include_parent](const FileInfo &a, const FileInfo &b) {
+            [include_parent_dir](const FileInfo &a, const FileInfo &b) {
               // Parent (..) always first
-              if (include_parent) {
+              if (include_parent_dir) {
                 if (a.isParentDir())
                   return true;
                 if (b.isParentDir())
