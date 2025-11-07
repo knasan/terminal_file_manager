@@ -12,7 +12,7 @@ target_include_directories(tmf-lib PUBLIC
 target_compile_features(tmf-lib PUBLIC cxx_std_17)
 
 # Optional: Header-Files for IDE ONLY
-#target_sources(fileinfo_lib PUBLIC
+#target_sources(tmf-lib PUBLIC
 #    FILE_SET HEADERS
 #    BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/fileinfo
 #    FILES

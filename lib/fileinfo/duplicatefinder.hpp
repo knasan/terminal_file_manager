@@ -7,7 +7,29 @@
 #include <string>
 
 /**
- * @brief Service for duplicate file detection
+ * @brief Service for duplicate file detection based on file hashes
+ *
+ * DuplicateFinder identifies duplicate files by grouping them based on their
+ * hash values. Files with identical hashes are considered duplicates. The class
+ * provides functionality to:
+ * - Find and mark duplicate files
+ * - Calculate wasted disk space from duplicates
+ * - Group duplicates by hash for further processing
+ *
+ * @note Files must have valid hash values set before calling findDuplicates()
+ * @note Only regular files (not directories) are considered for duplication
+ * @note Zero-byte files are ignored
+ *
+ * @see FileInfo::setHash()
+ * @see DuplicateGroup
+ *
+ * Example usage:
+ * @code
+ * std::vector<FileInfo> files = scanner.scanDirectory("/path");
+ * auto groups = DuplicateFinder::findDuplicates(files);
+ * long long wasted = DuplicateFinder::calculateWastedSpace(groups);
+ * std::cout << "Wasted space: " << wasted << " bytes\n";
+ * @endcode
  */
 class DuplicateFinder {
 public:

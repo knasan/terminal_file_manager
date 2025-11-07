@@ -1,69 +1,187 @@
+/**
+ * @file test_filescanner.cpp
+ * @brief Unit tests for the FileScanner class
+ *
+ * This file contains comprehensive Google Test unit tests that verify FileScanner
+ * functionality including directory scanning, sorting behavior, hash calculation,
+ * recursive traversal, and edge case handling.
+ *
+ * ## Test Coverage
+ *
+ * ### Basic Scanning (5 tests)
+ * - ScansEmptyDirectory: Empty directory handling
+ * - ScansFilesInDirectory: Regular file detection
+ * - ScansDirectories: Mixed files and directories
+ * - DetectsFileSize: Accurate size reporting (1 byte, 1 KB)
+ * - HandlesSpecialCharacters: Spaces, dashes, underscores in names
+ *
+ * ### Parent Directory Handling (4 tests)
+ * - IncludesParentDirectory: Parent (..) inclusion when requested
+ * - ExcludesParentDirectory: Parent (..) exclusion by default
+ * - SortsParentDirectoryFirst: Parent appears first when included
+ * - RecursiveScanDoesNotIncludeParent: No parent in recursive mode
+ *
+ * ### Sorting Behavior (4 tests)
+ * - SortsDirectoriesBeforeFiles: Directories precede files
+ * - SortsAlphabetically: Alphabetical order within categories
+ * - SortingOrderComplete: Full hierarchical sort validation
+ *   (Order: parent -> dirs alphabetically -> files alphabetically)
+ *
+ * ### Hash Calculation (5 tests)
+ * - CalculatesHashes: Hash generation for non-empty files
+ * - DoesNotHashEmptyFiles: Empty files skip hashing
+ * - DoesNotHashDirectories: Directories don't get hashed
+ * - IdenticalFilesHaveSameHash: Consistent hashing for same content
+ * - DifferentFilesHaveDifferentHashes: Unique hashes for different content
+ *
+ * ### Recursive Scanning (2 tests)
+ * - RecursiveScan: Deep directory traversal (3 levels)
+ * - RecursiveScanDoesNotIncludeParent: Parent handling in recursive mode
+ *
+ * ### Edge Cases (1 test)
+ * - HandlesNonExistentDirectory: Graceful handling of invalid paths
+ *
+ * @note All tests use FNV1A hash calculator for consistency
+ * @note Tests run in isolated temporary directories with automatic cleanup
+ *
+ * @see FileScanner
+ * @see FileInfo
+ * @see FNV1A
+ */
+
 #include <gtest/gtest.h>
 #include "filescanner.hpp"
 #include "fnv1a.hpp"
 #include <filesystem>
 #include <fstream>
 
+/**
+ * @class FileScannerTest
+ * @brief Test fixture for FileScanner unit tests
+ *
+ * Provides a test environment with a temporary test directory and helper
+ * methods for creating test files and directories. Uses FNV1A hash calculator
+ * for all tests to ensure consistent hashing behavior.
+ *
+ * The fixture provides:
+ * - Isolated temporary test directory for each test
+ * - Automatic cleanup after each test
+ * - Helper methods for creating test files and directories
+ * - Pre-configured FNV1A hasher instance
+ *
+ * @see FileScanner
+ * @see FNV1A
+ */
 class FileScannerTest : public ::testing::Test {
 protected:
+    /** @brief Path to temporary test directory */
     std::filesystem::path test_dir;
+
+    /** @brief FNV1A hash calculator instance used for all tests */
     FNV1A hasher;
-    
+
+    /**
+     * @brief Sets up the test environment before each test
+     *
+     * Creates a fresh temporary test directory at system temp location.
+     * Ensures each test starts with a clean, isolated environment.
+     */
     void SetUp() override {
         // Create temp test directory
         test_dir = std::filesystem::temp_directory_path() / "filescanner_test";
         std::filesystem::create_directories(test_dir);
     }
-    
+
+    /**
+     * @brief Cleans up the test environment after each test
+     *
+     * Removes the test directory and all its contents to prevent
+     * test pollution and disk space waste.
+     */
     void TearDown() override {
         // Cleanup
         if (std::filesystem::exists(test_dir)) {
             std::filesystem::remove_all(test_dir);
         }
     }
-    
-    // Helper: Create test file with content
+
+    /**
+     * @brief Helper method to create a test file with specified content
+     *
+     * Creates a file in the test directory with the given name and content.
+     * Supports subdirectory paths (e.g., "subdir/file.txt").
+     *
+     * @param name Filename or relative path from test_dir
+     * @param content String content to write to the file
+     */
     void createFile(const std::string& name, const std::string& content) {
         auto path = test_dir / name;
         std::ofstream file(path);
         file << content;
     }
-    
-    // Helper: Create test directory
+
+    /**
+     * @brief Helper method to create a test directory
+     *
+     * Creates a directory (including parent directories) in the test directory.
+     * Supports nested paths (e.g., "dir1/dir2/dir3").
+     *
+     * @param name Directory name or relative path from test_dir
+     */
     void createDir(const std::string& name) {
         std::filesystem::create_directories(test_dir / name);
     }
 };
 
+/**
+ * @test ScansEmptyDirectory
+ * @brief Verifies scanner handles empty directories correctly
+ *
+ * Tests that scanning an empty directory returns an empty result vector.
+ * This is the baseline test for scanner functionality.
+ *
+ * @see FileScanner::scanDirectory()
+ */
 TEST_F(FileScannerTest, ScansEmptyDirectory) {
     FileScanner scanner(hasher);
     auto results = scanner.scanDirectory(test_dir.string(), false, false);
-    
+
     EXPECT_TRUE(results.empty());
 }
 
+/**
+ * @test ScansFilesInDirectory
+ * @brief Verifies detection and cataloging of regular files
+ *
+ * Tests that the scanner correctly identifies all files in a directory,
+ * properly classifies them as non-directories, and reports non-zero sizes.
+ *
+ * @see FileScanner::scanDirectory()
+ * @see FileInfo::isDirectory()
+ * @see FileInfo::getFileSize()
+ */
 TEST_F(FileScannerTest, ScansFilesInDirectory) {
     createFile("file1.txt", "content1");
     createFile("file2.txt", "content2");
-    
+
     FileScanner scanner(hasher);
     auto results = scanner.scanDirectory(test_dir.string(), false, false);
-    
+
     EXPECT_EQ(results.size(), 2);
-    
+
     // Check files are present
     bool found_file1 = false;
     bool found_file2 = false;
-    
+
     for (const auto& info : results) {
         std::string filename = std::filesystem::path(info.getPath()).filename().string();
         if (filename == "file1.txt") found_file1 = true;
         if (filename == "file2.txt") found_file2 = true;
-        
+
         EXPECT_FALSE(info.isDirectory());
         EXPECT_GT(info.getFileSize(), 0);
     }
-    
+
     EXPECT_TRUE(found_file1);
     EXPECT_TRUE(found_file2);
 }
