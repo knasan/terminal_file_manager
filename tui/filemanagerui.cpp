@@ -826,8 +826,23 @@ bool FileManagerUI::handleGlobalShortcut(char key_pressed) {
           }
 
           if (success) {
-            // Async refresh (instead of blocking!)
-            loadDirectoryAsync(m_panel_path);
+            // delete file from backup list as well
+            auto idx_all_files = std::find(m_all_files.begin(), m_all_files.end(), selected);
+            if (idx_all_files != m_all_files.end()) {
+              m_all_files.erase(idx_all_files);
+            }
+
+            // delete file from current list
+            auto idx_file_infos = std::find(m_file_infos.begin(), m_file_infos.end(), selected);
+            if (idx_file_infos != m_file_infos.end()) {
+              m_file_infos.erase(idx_file_infos);
+            }
+            
+            // Refresh UI
+            updateMenuStrings(m_file_infos, m_panel_files);
+            updateVirtualizedView();
+            m_selected = 0;
+
           }
 
         } else {

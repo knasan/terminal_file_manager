@@ -55,6 +55,7 @@ public:
    * @return Constant reference to the path string.
    */
   const std::string &getPath() const { return m_path; }
+  bool operator==(const FileInfo& other) const { return m_path == other.m_path; };
 
   /**
    * @brief Gets the file size in bytes.
